@@ -1,6 +1,5 @@
 version: "3"
 services:
-  ...
   shepherd:
     build: .
     image: containrrr/shepherd
