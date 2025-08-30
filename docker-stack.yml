@@ -9,3 +9,5 @@ services:
       placement:
         constraints:
           - node.role == manager
+    env_file:
+      - stack.env
