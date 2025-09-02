@@ -1,0 +1,133 @@
+version: "2.1"
+services:
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - USER=ismael
+      - PASS={{CHANGE_ME}}
+    restart: always
+    volumes:
+      - /appdata/transmission:/config
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/downloads:/downloads
+      - /torrents:/watch
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    restart: always
+    volumes:
+      - /appdata/sonarr:/config
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/downloads:/downloads
+      - type: bind
+        source: /srv/remotemount/Notflix/notflix/tv
+        target: /tv
+    ports:
+      - 8989:8989
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    restart: always
+    volumes:
+      - /appdata/radarr:/config
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/downloads:/downloads
+      - type: bind
+        source: /srv/remotemount/Notflix/notflix/movies
+        target: /movies
+    ports:
+      - 7878:7878
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - AUTO_UPDATE=true
+    restart: always
+    volumes:
+      - /appdata/jackett:/config
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/jackettBlackole:/downloads
+    ports:
+      - 9117:9117
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /appdata/bazarr:/config
+      - type: bind
+        source: /srv/remotemount/Notflix/notflix/movies
+        target: /movies
+      - type: bind
+        source: /srv/remotemount/Notflix/notflix/tv
+        target: /tv
+    ports:
+      - 6767:6767
+    restart: always
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    ports:
+      - 8191:8191
+    environment:
+      - LOG_LEVEL=info
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
+    restart: unless-stopped
+    ports:
+      - "11011:11011"
+    volumes:
+      - /appdata/cleanuparr:/config
+    environment:
+      - PORT=11011
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Etc/UTC
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11011/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=Etc/UTC
+      - PORT=5055
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - 5055:5055
+    volumes:
+      - /appdata/jellyseerr:/app/config
+    dns: 192.168.1.250
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    restart: unless-stopped
