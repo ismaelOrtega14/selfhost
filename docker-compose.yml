@@ -1,0 +1,32 @@
+services:
+  broker:
+    image: docker.io/library/redis:8
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      - broker
+    ports:
+      - "8998:8000"
+    volumes:
+      - /srv/remotemount/paperless/paperless/data:/usr/src/paperless/data
+      - /srv/remotemount/paperless/paperless/media:/usr/src/paperless/media
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/paperless-ngx/export:/usr/src/paperless/export
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/paperless-ngx/consume:/usr/src/paperless/consume
+    environment:
+      USERMAP_UID: 1000
+      USERMAP_GID: 1000
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBHOST: 192.168.1.251
+      PAPERLESS_DBPORT: 5433
+      PAPERLESS_DBPASS: {{CHANGE_ME}}
+      PAPERLESS_TIME_ZONE: Europe/Madrid
+      PAPERLESS_OCR_LANGUAGE: spa
+      PAPERLESS_OCR_LANGUAGES: eng
+      PAPERLESS_URL: https://paperless.ios-tools.duckdns.org
+volumes:
+  redisdata:
