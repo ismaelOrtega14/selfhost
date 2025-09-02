@@ -1,0 +1,87 @@
+version: '3.3'
+
+services:
+  speedtest-tracker:
+    container_name: speedtest-tracker
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    ports:
+      - 8080:80
+      - 8443:443
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - APP_KEY={{CHANGE_ME}}
+      - APP_URL=http://localhost
+      - DB_CONNECTION=sqlite
+      - APP_DEBUG=true
+      - SPEEDTEST_SCHEDULE="0 * * * *"
+      - DISPLAY_TIMEZONE="Europe/Madrid"
+    volumes:
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/speedtestConfig:/config
+    restart: unless-stopped
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8888:80/tcp"
+    environment:
+      TZ: 'Europe/Madrid'
+      CHECK_LOAD: false
+      CORS_HOSTS: ios-tools.duckdns.org
+    volumes:
+      - '/srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/pi-hole:/etc/pihole'
+      - '/srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/pi-hole-dns:/etc/dnsmasq.d'
+    networks:
+      containers:
+        ipv4_address: 173.21.0.7
+    restart: unless-stopped
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - SUBDOMAINS=ios-vpn,ios-notflix
+      - TOKEN={{CHANGE_ME}}
+    restart: unless-stopped
+  ngix:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: ngix
+    restart: unless-stopped
+    ports:
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+    volumes:
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/ngixData:/data
+      - /letsEncript:/etc/letsencrypt
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/homepage:/app/config # Make sure your local config directory exists
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: ios-tools.duckdns.org,192.168.1.250:3000 # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+      PUID: 1000
+      PGID: 1000
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /appdata/homarr:/appdata
+    environment:
+      - SECRET_ENCRYPTION_KEY={{CHANGE_ME}}
+    dns: 192.168.1.250
+    ports:
+      - '7575:7575'
+
+networks:
+  containers:
+    ipam:
+      config:
+        - subnet: 173.21.0.0/24
