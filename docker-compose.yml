@@ -1,0 +1,33 @@
+version: "3"
+services:
+  yamtrack:
+    container_name: yamtrack
+    image: ghcr.io/fuzzygrim/yamtrack
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+      - SECRET=longstring
+      - REDIS_URL=redis://redis-yamtrack:6379
+      - DB_HOST=192.168.1.251
+      - DB_NAME=yamtrack
+      - DB_USER=yamtrack
+      - DB_PASSWORD={{change_me}}
+      - DB_PORT=5433
+    ports:
+      - "8010:8000"
+
+  redis-yamtrack:
+    container_name: redis-yamtrack
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  redis_data:
