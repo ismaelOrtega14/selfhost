@@ -1,32 +1,31 @@
 version: "3.8"
 services:
-  pi-hole:
-    image: pihole/pihole:latest
+  dns-server:
+    image: technitium/dns-server:latest
     ports:
-      - target: 53
-        published: 53
-        protocol: tcp
-        mode: host
-      - target: 53
-        published: 53
-        protocol: udp
-        mode: host
-      - target: 80
-        published: 8080
-        protocol: tcp
-        mode: host
+      - "5380:5380/tcp" #DNS web console (HTTP)
+      - "53:53/udp" #DNS service
+      - "53:53/tcp" #DNS service
+      # - "853:853/udp" #DNS-over-QUIC service
+      # - "853:853/tcp" #DNS-over-TLS service
+      # - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
+      # - "443:443/tcp" #DNS-over-HTTPS service (HTTP/1.1, HTTP/2)
+      # - "80:80/tcp" #DNS-over-HTTP service (use with reverse proxy or certbot certificate renewal)
+      # - "8053:8053/tcp" #DNS-over-HTTP service (use with reverse proxy)
+      # - "67:67/udp" #DHCP service
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
     volumes:
-      - '/home/ismael/pi-hole/pi-hole:/etc/pihole'
-      - '/home/ismael/pi-hole/pi-hole-dns:/etc/dnsmasq.d'
+      - '/home/ismael/technitium/config:/etc/dns'
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"]
-      interval: 1m30s
-      timeout: 10s
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 cloudflare.com || exit 1"]
+      interval: 30s
+      timeout: 3s
       retries: 3
-      start_period: 40s
+      start_period: 5s
     env_file:
       - stack.env
