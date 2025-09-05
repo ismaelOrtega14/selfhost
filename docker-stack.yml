@@ -16,8 +16,8 @@ services:
         protocol: tcp
         mode: host
     volumes:
-      - '~/pi-hole/pi-hole:/etc/pihole'
-      - '~/pi-hole/pi-hole-dns:/etc/dnsmasq.d'
+      - '/home/ismael/pi-hole/pi-hole:/etc/pihole'
+      - '/home/ismael/pi-hole/pi-hole-dns:/etc/dnsmasq.d'
     deploy:
       replicas: 1
       restart_policy:
