@@ -22,5 +22,11 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short +norecurse +retry=0 @127.0.0.1 pi.hole || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     env_file:
       - stack.env
