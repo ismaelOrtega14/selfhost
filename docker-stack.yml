@@ -34,6 +34,8 @@ services:
     image: fosrl/pangolin:latest
     volumes:
       - /home/ismael/pangolin/pangolin/config:/app/config
+    networks:
+      - pangolin_net
     deploy:
       replicas: 1
       restart_policy:
@@ -47,6 +49,8 @@ services:
     image: fosrl/gerbil:1.0.0
     depends_on:
       - pangolin
+    networks:
+      - pangolin_net
     deploy:
       replicas: 1
       restart_policy:
@@ -80,7 +84,8 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-    network_mode: service:gerbil
+    networks:
+      - pangolin_net
     secrets:
       - duckdns_token
     volumes:
@@ -96,6 +101,11 @@ services:
       start_period: 5s
     env_file:
       - stack.env
+
+networks:
+  pangolin_net:
+    driver: overlay
+    attachable: true
 
 secrets:
   duckdns_token:
