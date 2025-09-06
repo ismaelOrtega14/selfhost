@@ -85,7 +85,7 @@ services:
     networks:
       - pangolin_net
     secrets:
-      - duckdns_token
+      - desec_token
     volumes:
       - /home/ismael/pangolin/traefik/config:/etc/traefik
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
@@ -100,5 +100,5 @@ networks:
     attachable: true
 
 secrets:
-  duckdns_token:
+  desec_token:
     external: true
