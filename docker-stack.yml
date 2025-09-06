@@ -34,8 +34,6 @@ services:
     image: fosrl/pangolin:latest
     volumes:
       - /home/ismael/pangolin/pangolin/config:/app/config
-    networks:
-      - pangolin_net
     deploy:
       replicas: 1
       restart_policy:
@@ -49,8 +47,6 @@ services:
     image: fosrl/gerbil:1.0.0
     depends_on:
       - pangolin
-    networks:
-      - pangolin_net
     deploy:
       replicas: 1
       restart_policy:
@@ -69,22 +65,19 @@ services:
       - target: 51820
         published: 51820
         protocol: udp
-        mode: host
-  traefik:
-    image: traefik:v3.3.3
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    networks:
-      - pangolin_net
-    ports:
       - target: 443
         published: 443
         protocol: tcp
       - target: 80
         published: 80
         protocol: tcp
+  traefik:
+    image: traefik:v3.3.3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    network_mode: service:gerbil
     secrets:
       - duckdns_token
     volumes:
