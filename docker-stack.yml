@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  yamtrack:
+    image: ghcr.io/fuzzygrim/yamtrack
+    ports:
+      - "8010:8000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    env_file:
+      - stack.env
+    secrets:
+      - yamtrack-db-secret
+  redis-yamtrack:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  redis_data:
+    driver: local
+
+secrets:
+  yamtrack-db-secret:
+    external: true
