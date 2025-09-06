@@ -47,8 +47,6 @@ services:
       retries: 15 
   gerbil:
     image: fosrl/gerbil:1.0.0
-    depends_on:
-      - pangolin
     deploy:
       replicas: 1
       restart_policy:
@@ -69,6 +67,9 @@ services:
       - target: 51820
         published: 51820
         protocol: udp
+      - target: 21820
+        published: 21820
+        protocol: udp
       - target: 443
         published: 443
         protocol: tcp
@@ -76,11 +77,11 @@ services:
         published: 80
         protocol: tcp
   traefik:
-    image: traefik:v3.3.3
+    image: traefik:v3.5
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
     networks:
       - pangolin_net
     secrets:
