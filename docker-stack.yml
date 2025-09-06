@@ -91,12 +91,6 @@ services:
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
     command:
       - --configFile=/etc/traefik/traefik_config.yml
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
     env_file:
       - stack.env
 
