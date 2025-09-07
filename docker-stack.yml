@@ -45,6 +45,8 @@ services:
       interval: "3s"
       timeout: "3s"
       retries: 15 
+    secrets:
+      - pangolin-server-secret
   gerbil:
     image: fosrl/gerbil:1.0.0
     deploy:
@@ -70,12 +72,12 @@ services:
       - target: 21820
         published: 21820
         protocol: udp
-      - target: 443
-        published: 443
-        protocol: tcp
-      - target: 80
-        published: 80
-        protocol: tcp
+      # - target: 443
+      #   published: 443
+      #   protocol: tcp
+      # - target: 80
+      #   published: 80
+      #   protocol: tcp
   traefik:
     image: traefik:latest
     deploy:
@@ -84,6 +86,13 @@ services:
         condition: any
     networks:
       - pangolin_net
+    ports:
+      - target: 443
+        published: 443
+        protocol: tcp
+      - target: 80
+        published: 80
+        protocol: tcp
     secrets:
       - desec_token
     volumes:
@@ -101,4 +110,6 @@ networks:
 
 secrets:
   desec_token:
+    external: true
+  pangolin-server-secret:
     external: true
