@@ -47,6 +47,8 @@ services:
       retries: 15 
     secrets:
       - pangolin-server-secret
+    env_file:
+      - stack.env
   gerbil:
     image: fosrl/gerbil:1.0.0
     deploy:
