@@ -30,21 +30,21 @@ services:
     env_file:
       - stack.env
 
-  # pangolin:
-  #   image: fosrl/pangolin:latest
-  #   volumes:
-  #     - /home/ismael/pangolin/pangolin/config:/app/config
-  #   deploy:
-  #     replicas: 1
-  #     restart_policy:
-  #       condition: on-failure
-  #   networks:
-  #     - pangolin_net
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
-  #     interval: "3s"
-  #     timeout: "3s"
-  #     retries: 15 
+  pangolin:
+    image: fosrl/pangolin:latest
+    volumes:
+      - /home/ismael/pangolin/pangolin/config:/app/config
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - pangolin_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "3s"
+      timeout: "3s"
+      retries: 15 
   # gerbil:
   #   image: fosrl/gerbil:1.0.0
   #   deploy:
