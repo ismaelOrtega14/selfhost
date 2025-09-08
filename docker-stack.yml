@@ -115,6 +115,9 @@ services:
       replicas: 1
       restart_policy:
         condition: any
+    secrets:
+      - authentik_db
+      - authentik_secret_key
     user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
