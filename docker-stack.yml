@@ -1,35 +1,5 @@
 version: "3.9"
 services:
-  dns-server:
-    image: technitium/dns-server:latest
-    ports:
-      - "5380:5380/tcp" #DNS web console (HTTP)
-      - "53:53/udp" #DNS service
-      - "53:53/tcp" #DNS service
-      # - "853:853/udp" #DNS-over-QUIC service
-      # - "853:853/tcp" #DNS-over-TLS service
-      # - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
-      # - "443:443/tcp" #DNS-over-HTTPS service (HTTP/1.1, HTTP/2)
-      # - "80:80/tcp" #DNS-over-HTTP service (use with reverse proxy or certbot certificate renewal)
-      # - "8053:8053/tcp" #DNS-over-HTTP service (use with reverse proxy)
-      # - "67:67/udp" #DHCP service
-    sysctls:
-      - net.ipv4.ip_local_port_range=1024 65000
-    volumes:
-      - '/home/ismael/technitium/config:/etc/dns'
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 cloudflare.com || exit 1"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-    env_file:
-      - stack.env
-
   pangolin:
     image: fosrl/pangolin:latest
     volumes:
@@ -74,12 +44,6 @@ services:
       - target: 21820
         published: 21820
         protocol: udp
-      # - target: 443
-      #   published: 443
-      #   protocol: tcp
-      # - target: 80
-      #   published: 80
-      #   protocol: tcp
   traefik:
     image: traefik:latest
     deploy:
@@ -115,3 +79,4 @@ secrets:
     external: true
   pangolin-server-secret:
     external: true
+
