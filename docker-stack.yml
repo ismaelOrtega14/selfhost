@@ -69,6 +69,61 @@ services:
     env_file:
       - stack.env
 
+  redis-authentik:
+    command: --save 60 1 --loglevel warning
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test:
+      - CMD-SHELL
+      - redis-cli ping | grep PONG
+      timeout: 3s
+    image: docker.io/library/redis:alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    volumes:
+    - redis:/data
+  server:
+    command: server
+    image: ghcr.io/goauthentik/server:latest
+    secrets:
+      - authentik_db
+      - authentik_secret_key
+    ports:
+      - target: 9443
+        published: 
+        protocol: tcp
+      - target: 9000
+        published: 9000
+        protocol: tcp
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    volumes:
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file:
+      - stack.env
+  worker:
+    command: worker
+    image: ghcr.io/goauthentik/server:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/certs:/certs
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file:
+      - stack.env
+
 networks:
   pangolin_net:
     driver: overlay
@@ -79,4 +134,12 @@ secrets:
     external: true
   pangolin-server-secret:
     external: true
+  authentik_db:
+    external: true
+  authentik_secret_key:
+    external: true
+
+volumes:
+  redis:
+    driver: local
 
