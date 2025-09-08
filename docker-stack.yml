@@ -97,7 +97,7 @@ services:
         published: 9433
         protocol: tcp
       - target: 9000
-        published: 9000
+        published: 9900
         protocol: tcp
     deploy:
       replicas: 1
