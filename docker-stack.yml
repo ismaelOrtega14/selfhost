@@ -94,7 +94,7 @@ services:
       - authentik_secret_key
     ports:
       - target: 9443
-        published: 
+        published: 9433
         protocol: tcp
       - target: 9000
         published: 9000
