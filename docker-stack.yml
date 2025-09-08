@@ -79,7 +79,7 @@ services:
       - CMD-SHELL
       - redis-cli ping | grep PONG
       timeout: 3s
-    image: docker.io/library/redis:alpine
+    image: redis:7-alpine
     deploy:
       replicas: 1
       restart_policy:
