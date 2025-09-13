@@ -15,7 +15,7 @@ services:
         published: 9091
         protocol: tcp
     secrets:
-      - transmission-pass
+      - transmission_pass
     env_file:
       - stack.env
   sonarr:
