@@ -1,2 +1,2 @@
 # selfhost
-My diferent selfhosts docker-compose.yml and envfiles
+Selfhosting security services
