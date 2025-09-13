@@ -1,2 +1,2 @@
 # selfhost
-My diferent selfhosts docker-compose.yml and envfiles
+Stack to update and manage docker images
