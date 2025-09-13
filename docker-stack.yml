@@ -47,7 +47,7 @@ services:
     ports:
       - target: 7878
         published: 7878
-        condition: tcp
+        protocol: tcp
     env_file:
       - stack.env
   jackett:
