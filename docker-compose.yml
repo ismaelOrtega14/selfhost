@@ -1,47 +1,49 @@
-version: '3.3'
-
 services:
-  speedtest-tracker:
-    container_name: speedtest-tracker
-    image: lscr.io/linuxserver/speedtest-tracker:latest
+  dns-server:
+    image: technitium/dns-server:latest
+    container_name: dns-server
     ports:
-      - 8080:80
-      - 8443:443
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - APP_KEY={{CHANGE_ME}}
-      - APP_URL=http://localhost
-      - DB_CONNECTION=sqlite
-      - APP_DEBUG=true
-      - SPEEDTEST_SCHEDULE="0 * * * *"
-      - DISPLAY_TIMEZONE="Europe/Madrid"
+      - target: 5380 #DNS web console (HTTP)
+        published: 5380
+        protocol: tcp
+      - target: 53 #DNS service
+        published: 53
+        protocol: tcp
+      - target: 53 #DNS service
+        published: 53
+        protocol: udp
+      # - "853:853/udp" #DNS-over-QUIC service
+      # - "853:853/tcp" #DNS-over-TLS service
+      # - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
+      # - "443:443/tcp" #DNS-over-HTTPS service (HTTP/1.1, HTTP/2)
+      # - "80:80/tcp" #DNS-over-HTTP service (use with reverse proxy or certbot certificate renewal)
+      # - "8053:8053/tcp" #DNS-over-HTTP service (use with reverse proxy)
+      # - "67:67/udp" #DHCP service
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
     volumes:
-      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/speedtestConfig:/config
+      - '/home/ismael/technitium/config:/etc/dns'
+    network_mode: "host"
     restart: unless-stopped
-  duckdns:
-    image: lscr.io/linuxserver/duckdns:latest
-    container_name: duckdns
-    environment:
-      - SUBDOMAINS=ios-vpn,ios-notflix
-      - TOKEN={{CHANGE_ME}}
-    restart: unless-stopped
-  homarr:
-    container_name: homarr
-    image: ghcr.io/homarr-labs/homarr:latest
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    env_file:
+      - stack.env
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /appdata/homarr:/appdata
-    environment:
-      - SECRET_ENCRYPTION_KEY={{CHANGE_ME}}
-    dns: 192.168.1.250
+      - /home/ismael/ddns:/updater/data
     ports:
-      - '7575:7575'
+      - target: 8000
+        published: 8008
+        protocol: tcp
+    restart: unless-stopped
+    dns:
+      - 192.168.1.250
 
-networks:
-  containers:
-    ipam:
-      config:
 
-        - subnet: 173.21.0.0/24

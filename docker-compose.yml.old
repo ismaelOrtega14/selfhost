@@ -1,0 +1,47 @@
+version: '3.3'
+
+services:
+  speedtest-tracker:
+    container_name: speedtest-tracker
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    ports:
+      - 8080:80
+      - 8443:443
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - APP_KEY={{CHANGE_ME}}
+      - APP_URL=http://localhost
+      - DB_CONNECTION=sqlite
+      - APP_DEBUG=true
+      - SPEEDTEST_SCHEDULE="0 * * * *"
+      - DISPLAY_TIMEZONE="Europe/Madrid"
+    volumes:
+      - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/speedtestConfig:/config
+    restart: unless-stopped
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - SUBDOMAINS=ios-vpn,ios-notflix
+      - TOKEN={{CHANGE_ME}}
+    restart: unless-stopped
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /appdata/homarr:/appdata
+    environment:
+      - SECRET_ENCRYPTION_KEY={{CHANGE_ME}}
+    dns: 192.168.1.250
+    ports:
+      - '7575:7575'
+
+networks:
+  containers:
+    ipam:
+      config:
+
+        - subnet: 173.21.0.0/24
