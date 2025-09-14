@@ -21,6 +21,8 @@ services:
       - target: 8000
         published: 8998
         protocol: tcp
+    enviroment:
+      - PAPERLESS_SOCIALACCOUNT_PROVIDERS=CHANGE_ME
     secrets:
       - paperless-db-secret
     env_file:
@@ -31,4 +33,5 @@ volumes:
 
 secrets:
   paperless-db-secret:
+
     external: true
