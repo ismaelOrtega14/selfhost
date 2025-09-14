@@ -3,9 +3,15 @@ services:
   dns-server:
     image: technitium/dns-server:latest
     ports:
-      - "5380:5380/tcp" #DNS web console (HTTP)
-      - "53:53/udp" #DNS service
-      - "53:53/tcp" #DNS service
+      - target: 5380 #DNS web console (HTTP)
+        published: 5380
+        protocol: tcp
+      - target: 53 #DNS service
+        published: 53
+        protocol: tcp
+      - target: 53 #DNS service
+        published: 53
+        protocol: udp
       # - "853:853/udp" #DNS-over-QUIC service
       # - "853:853/tcp" #DNS-over-TLS service
       # - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
@@ -29,3 +35,4 @@ services:
       start_period: 5s
     env_file:
       - stack.env
+
