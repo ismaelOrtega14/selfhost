@@ -6,12 +6,15 @@ services:
       - target: 5380 #DNS web console (HTTP)
         published: 5380
         protocol: tcp
+        mode: host
       - target: 53 #DNS service
         published: 53
         protocol: tcp
+        mode: host
       - target: 53 #DNS service
         published: 53
         protocol: udp
+        mode: host
       # - "853:853/udp" #DNS-over-QUIC service
       # - "853:853/tcp" #DNS-over-TLS service
       # - "443:443/udp" #DNS-over-HTTPS service (HTTP/3)
