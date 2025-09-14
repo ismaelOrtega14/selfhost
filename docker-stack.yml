@@ -28,7 +28,7 @@ services:
       restart_policy:
         condition: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 cloudflare.com || exit 1"]
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -49,4 +49,5 @@ services:
         condition: on-failure
     dns:
       - 192.168.1.250
+
 
