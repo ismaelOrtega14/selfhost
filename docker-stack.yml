@@ -38,17 +38,3 @@ services:
       start_period: 5s
     env_file:
       - stack.env
-  ddns-updater:
-    image: qmcgaw/ddns-updater
-    volumes:
-      - /home/ismael/ddns:/updater/data
-    ports:
-      - target: 8000
-        published: 8008
-        protocol: tcp
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    dns:
-      - 192.168.1.250

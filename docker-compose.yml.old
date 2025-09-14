@@ -19,13 +19,6 @@ services:
     volumes:
       - /srv/dev-disk-by-uuid-90a5eef8-7cd5-4b8b-ab30-29f820cb6857/speedtestConfig:/config
     restart: unless-stopped
-  duckdns:
-    image: lscr.io/linuxserver/duckdns:latest
-    container_name: duckdns
-    environment:
-      - SUBDOMAINS=ios-vpn,ios-notflix
-      - TOKEN={{CHANGE_ME}}
-    restart: unless-stopped
   homarr:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
