@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  my_actual_budget:
+    image: actualbudget/actual-server:latest
+    deploy:
+      restart_policy:
+        condition: any
+    ports:
+      - target: 5006
+        published: 5006
+        protocol: tcp
+    volumes:
+      - /ruta/absoluta/a/tu/data:/data
