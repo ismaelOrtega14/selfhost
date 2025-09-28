@@ -10,4 +10,4 @@ services:
         published: 5006
         protocol: tcp
     volumes:
-      - /ruta/absoluta/a/tu/data:/data
+      - /home/ismael/actualBudget/data:/data
