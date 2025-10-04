@@ -14,7 +14,7 @@ services:
         limits:
           memory: 1000M
     volumes:
-      - mealie-data:/app/data/
+      - /home/ismael/mealie/data:/app/data/
     secrets:
       - mealie_db
       - mealie_openId
