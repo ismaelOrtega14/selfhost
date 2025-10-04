@@ -5,7 +5,7 @@ services:
     ports:
       - target: 9000
         published: 9925
-        protocol: udp
+        protocol: tcp
     deploy:
       replicas: 1
       restart_policy:
