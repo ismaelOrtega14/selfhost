@@ -17,9 +17,13 @@ services:
       - mealie-data:/app/data/
     secrets:
       - mealie_db
+      - mealie_openId
     env_file:
       - stack.env
 
 secrets:
   mealie_db:
     external: true
+  mealie_openId:
+    external: true
+    
