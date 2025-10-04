@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    ports:
+      - target: 9000
+        published: 9925
+        protocol: udp
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1000M
+    volumes:
+      - mealie-data:/app/data/
+    secrets:
+      - mealie_db
+    env_file:
+      - stack.env
+
+secrets:
+  mealie_db:
+    external: true
