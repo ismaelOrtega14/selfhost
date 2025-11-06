@@ -13,6 +13,12 @@ services:
       resources:
         limits:
           memory: 1000M
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:9000/api/app/about || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     volumes:
       - /home/ismael/mealie/data:/app/data/
     secrets:
@@ -26,4 +32,5 @@ secrets:
     external: true
   mealie_openId:
     external: true
+
     
