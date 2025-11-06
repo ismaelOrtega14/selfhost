@@ -14,11 +14,11 @@ services:
         limits:
           memory: 1000M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/app/about || exit 1"]
-      interval: 300s  # 5 minutos en lugar de 30 segundos
-      timeout: 5s
+      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
+      interval: 120s
+      timeout: 15s
       retries: 3
-      start_period: 60s
+      start_period: 30s
     volumes:
       - /home/ismael/mealie/data:/app/data/
     secrets:
@@ -34,4 +34,5 @@ secrets:
     external: true
 
     
+
 
