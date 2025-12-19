@@ -119,7 +119,6 @@ services:
     secrets:
       - authentik_db
       - authentik_secret_key
-    user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/ismael/authentik/media:/media
@@ -146,4 +145,5 @@ secrets:
 volumes:
   redis:
     driver: local
+
 
