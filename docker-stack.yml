@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  linkding:
+    image: sissbruecker/linkding:latest
+    deploy:
+      restart_policy:
+        condition: any
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+    env_file:
+      - .env
+    volumes:
+      - /home/ismael/linkding/data:/data
