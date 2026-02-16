@@ -5,8 +5,6 @@ services:
     deploy:
       restart_policy:
         condition: any
-    environment:
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
     ports:
       - target: 3000
         published: 3000
