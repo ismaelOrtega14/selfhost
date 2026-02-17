@@ -89,28 +89,6 @@ services:
         condition: on-failure
     environment:
       - LOG_LEVEL=info
-  cleanuparr:
-    image: ghcr.io/cleanuparr/cleanuparr:latest
-    volumes:
-      - /home/ismael/cleanuparr/config:/config
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 11011
-        published: 11011
-        protocol: tcp
-    environment:
-      - PORT=11011
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11011/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 30s
-      retries: 3
-    env_file:
-        - stack.env
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     environment:
@@ -136,3 +114,4 @@ services:
 secrets:
   transmission_pass:
     external: true
+
