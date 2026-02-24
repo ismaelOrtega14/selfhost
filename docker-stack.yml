@@ -14,7 +14,7 @@ services:
       - target: 9091
         published: 9091
         protocol: tcp
-    user: 1026
+    user: "1026"
     secrets:
       - transmission_pass
     env_file:
@@ -33,7 +33,7 @@ services:
       - target: 8989
         published: 8989
         protocol: tcp
-    user: 1026
+    user: "1026"
     env_file:
       - stack.env
   radarr:
@@ -50,7 +50,7 @@ services:
       - target: 7878
         published: 7878
         protocol: tcp
-    user: 1026
+    user: "1026"
     env_file:
       - stack.env
   jackett:
@@ -66,7 +66,7 @@ services:
       - target: 9117
         published: 9117
         protocol: tcp
-    user: 1026
+    user: "1026"
     env_file:
       - stack.env
   bazarr:
@@ -83,7 +83,7 @@ services:
       - target: 6767
         published: 6767
         protocol: tcp
-    user: 1026
+    user: "1026"
     env_file:
         - stack.env
   flaresolverr:
@@ -92,7 +92,7 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-    user: 1026
+    user: "1026"
     environment:
       - LOG_LEVEL=info
   jellyseerr:
@@ -107,7 +107,7 @@ services:
       - target: 5055
         published: 5055
         protocol: tcp
-    user: 1026
+    user: "1026"
     volumes:
       - /home/ismael/jellyseerr/config:/app/config
     dns: 192.168.0.250
