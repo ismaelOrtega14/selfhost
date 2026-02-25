@@ -92,7 +92,6 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-    user: "1026"
     environment:
       - LOG_LEVEL=info
   jellyseerr:
@@ -121,4 +120,5 @@ services:
 secrets:
   transmission_pass:
     external: true
+
 
