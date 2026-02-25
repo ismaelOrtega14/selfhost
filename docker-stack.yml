@@ -13,6 +13,8 @@ services:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
     env_file:
       - stack.env
+    secrets:
+      - linkwarden-db
   meilisearch:
     image: getmeili/meilisearch:v1.12.8
     volumes:
