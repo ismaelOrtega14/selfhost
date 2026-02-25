@@ -19,3 +19,7 @@ services:
     image: getmeili/meilisearch:v1.12.8
     volumes:
       - /home/ismael/bookmarks/melidata/data:/meili_data
+      
+secrets:
+  linkwarden-db:
+    external: true
