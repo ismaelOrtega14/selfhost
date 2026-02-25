@@ -11,6 +11,8 @@ services:
         protocol: tcp
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
+    env_file:
+      - stack.env
   meilisearch:
     image: getmeili/meilisearch:v1.12.8
     volumes:
