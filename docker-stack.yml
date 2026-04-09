@@ -94,7 +94,7 @@ services:
         condition: on-failure
     environment:
       - LOG_LEVEL=info
-  jellyseerr:
+  seerr:
     image: ghcr.io/seerr-team/seerr:latest
     environment:
       - PORT=5055
@@ -108,7 +108,7 @@ services:
         protocol: tcp
     user: "1026"
     volumes:
-      - /home/ismael/jellyseerr/config:/app/config
+      - /home/ismael/seerr/config:/app/config
     dns: 192.168.0.250
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
