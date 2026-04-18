@@ -116,6 +116,14 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:latest
+    user: 1024:100
+    volumes:
+      - /home/ismael/maintainerr/config:/opt/data
+    ports:
+      - 6246:6246
+    restart: unless-stopped
 
 secrets:
   transmission_pass:
