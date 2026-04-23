@@ -1,124 +1,24 @@
 version: "3.9"
 services:
-  transmission:
-    image: lscr.io/linuxserver/transmission:latest
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
     volumes:
-      - /home/ismael/transmission/config:/config
-      - /home/ismael/downloads:/downloads
-      - /home/ismael/transmission/torrents:/watch
+      - /home/ismael/n8n/n8n_data:/home/node/.n8n
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     ports:
-      - target: 9091
-        published: 9091
+      - target: 5678
+        published: 5678
         protocol: tcp
-    user: "1026"
     secrets:
-      - transmission_pass
+      - n8n_pass
     env_file:
       - stack.env
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    volumes:
-      - /home/ismael/sonarr/config:/config
-      - /home/ismael/downloads:/downloads
-      - /home/ismael/tv:/tv
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 8989
-        published: 8989
-        protocol: tcp
-    user: "1026"
-    env_file:
-      - stack.env
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    volumes:
-      - /home/ismael/radarr/config:/config
-      - /home/ismael/downloads:/downloads
-      - /home/ismael/movies:/movies
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 7878
-        published: 7878
-        protocol: tcp
-    user: "1026"
-    env_file:
-      - stack.env
-  jackett:
-    image: lscr.io/linuxserver/jackett:latest
-    volumes:
-      - /home/ismael/jackett/config:/config
-      - /home/ismael/jackettBlackhole:/downloads
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 9117
-        published: 9117
-        protocol: tcp
-    user: "1026"
-    env_file:
-      - stack.env
-  bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
-    volumes:
-      - /home/ismael/bazarr/config:/config
-      - /home/ismael/movies:/movies
-      - /home/ismael/tv:/tv
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 6767
-        published: 6767
-        protocol: tcp
-    user: "1026"
-    env_file:
-        - stack.env
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    environment:
-      - LOG_LEVEL=info
-  seerr:
-    image: ghcr.io/seerr-team/seerr:latest
-    environment:
-      - PORT=5055
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - target: 5055
-        published: 5055
-        protocol: tcp
-    user: "1026"
-    volumes:
-      - /home/ismael/seerr/config:/app/config
-    dns: 192.168.0.250
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
-      start_period: 20s
-      timeout: 3s
-      interval: 15s
-      retries: 3
 
 secrets:
-  transmission_pass:
+  n8n_pass:
     external: true
 
 
