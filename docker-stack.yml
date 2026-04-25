@@ -9,6 +9,7 @@ services:
   webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     volumes:
+      - /home/ismael/paperless/paperless/scripts:/usr/src/paperless/scripts
       - /home/ismael/paperless/paperless/data:/usr/src/paperless/data
       - /home/ismael/paperless/paperless/media:/usr/src/paperless/media
       - /home/ismael/paperless-ngx/export:/usr/src/paperless/export
