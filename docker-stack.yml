@@ -13,7 +13,6 @@ services:
         published: 2283
         protocol: tcp
         mode: ingress
-    user: "1026:100"
     deploy:
       replicas: 1
       restart_policy:
@@ -65,7 +64,6 @@ services:
     volumes:
       - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
     shm_size: 128mb
-    user: "1026:100"
     deploy:
       replicas: 1
       restart_policy:
