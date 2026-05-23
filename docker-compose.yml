@@ -42,7 +42,7 @@ services:
     environment:
       SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/api/v1/"]
       interval: 3s
       timeout: 3s
       retries: 15
@@ -266,7 +266,7 @@ services:
       PGID: "100"
       TZ: Europe/Madrid
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8989 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8989 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -296,7 +296,7 @@ services:
       PGID: "100"
       TZ: Europe/Madrid
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:7878 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:7878 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -326,7 +326,7 @@ services:
       PGID: "100"
       TZ: Europe/Madrid
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:6767 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:6767 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -353,7 +353,7 @@ services:
     environment:
       PORT: 5055
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5055/api/v1/settings/public || exit 1
       start_period: 20s
       timeout: 3s
       interval: 15s
@@ -406,7 +406,7 @@ services:
       DB_PORT: "5433"
       TZ: Europe/Berlin
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8000 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -430,7 +430,7 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7700/health"]
       interval: 10s
       retries: 5
       start_period: 20s
@@ -451,7 +451,7 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: http://localhost:3000
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:3000 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -472,7 +472,7 @@ services:
     volumes:
       - /home/ismael/actualBudget/data:/data
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5006 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5006 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -537,7 +537,7 @@ services:
       - "2283:2283/tcp"
     user: "1024:100"
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:2283/server-info/version || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:2283/server-info/version || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -560,7 +560,7 @@ services:
     environment:
       IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3003"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -658,7 +658,7 @@ services:
       PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS: "true"
       PAPERLESS_PRE_CONSUME_SCRIPT: /usr/src/paperless/scripts/removepassword.py
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8000 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
