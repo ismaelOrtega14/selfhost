@@ -95,7 +95,7 @@ services:
     command:
       - --configFile=/etc/traefik/traefik_config.yml
       - --ping=true
-      - --ping.entryPoint=web
+      - --api.insecure=true
     environment:
       DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
       TRAEFIK_LOG_LEVEL: DEBUG
