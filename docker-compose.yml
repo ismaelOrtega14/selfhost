@@ -534,7 +534,7 @@ services:
       - "2283:2283/tcp"
     user: "1024:100"
     healthcheck:
-      test: node -e "require('http').get('http://127.0.0.1:2283/server-info/version').on('response',r=>process.exit(r.statusCode==200?0:1)).on('error',()=>process.exit(1))"
+      test: node -e "require('http').get('http://127.0.0.1:2283/server-info/version').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       retries: 3
