@@ -202,7 +202,7 @@ services:
       USER: ismael
       PASS: ${TRANSMISSION_PASSWORD}
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9091 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9091 2>&1 || [ $? -eq 8 ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -219,7 +219,7 @@ services:
     environment:
       LOG_LEVEL: info
     healthcheck:
-      test: node -e "require('http').get('http://127.0.0.1:8191/health',r=>process.exit(r.statusCode==200?0:1)).on('error',()=>process.exit(1))"
+      test: curl -sf http://127.0.0.1:8191/health || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
