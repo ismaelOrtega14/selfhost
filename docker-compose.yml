@@ -1,7 +1,7 @@
 # =====================================================================
 # selfhost — unified compose
 # Orden: network → security → notflix → tracker → resto
-# Env vars via env_file: stack.env; secretos via ${VAR} desde Portainer
+# Secretos via ${VAR} desde Portainer; demas vars en claro
 # =====================================================================
 
 services:
@@ -19,7 +19,9 @@ services:
       - net.ipv4.ip_local_port_range=1024 65000
     volumes:
       - /home/ismael/technitium/config:/etc/dns
-    env_file: stack.env
+    environment:
+      DNS_SERVER_DOMAIN: dns-server
+      DNS_SERVER_FORWARDERS: "1.1.1.1, 1.1.2.2"
     healthcheck:
       test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
       interval: 30s
@@ -37,7 +39,6 @@ services:
       - /home/ismael/pangolin/pangolin/config:/app/config
     networks:
       - pangolin_net
-    env_file: stack.env
     environment:
       SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
     healthcheck:
@@ -93,9 +94,11 @@ services:
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
     command:
       - --configFile=/etc/traefik/traefik_config.yml
-    env_file: stack.env
     environment:
       DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
+      TRAEFIK_LOG_LEVEL: DEBUG
+      LEGO_EXPERIMENTAL_CNAME_SUPPORT: "true"
+      LEGO_DISABLE_CNAME_SUPPORT: "false"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
       interval: 15s
@@ -134,10 +137,14 @@ services:
     volumes:
       - /home/ismael/authentik/media:/media
       - /home/ismael/authentik/custom-templates:/templates
-    env_file: stack.env
     environment:
       AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: 192.168.0.251
+      AUTHENTIK_POSTGRESQL__PORT: "5433"
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_REDIS__HOST: authentik-redis
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9000/-/health/"]
       interval: 30s
@@ -159,10 +166,14 @@ services:
       - /home/ismael/authentik/media:/media
       - /home/ismael/authentik/certs:/certs
       - /home/ismael/authentik/custom-templates:/templates
-    env_file: stack.env
     environment:
       AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: 192.168.0.251
+      AUTHENTIK_POSTGRESQL__PORT: "5433"
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_REDIS__HOST: authentik-redis
     depends_on:
       dns-server:
         condition: service_healthy
@@ -182,8 +193,11 @@ services:
       - /home/ismael/downloads:/downloads
       - /home/ismael/transmission/torrents:/watch
     user: "1026"
-    env_file: stack.env
     environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
+      USER: ismael
       PASS: ${TRANSMISSION_PASSWORD}
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:9091 || exit 1
@@ -223,7 +237,11 @@ services:
       - /home/ismael/jackett/config:/config
       - /home/ismael/jackettBlackhole:/downloads
     user: "1026"
-    env_file: stack.env
+    environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
+      AUTO_UPDATE: "true"
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:9117 || exit 1
       interval: 30s
@@ -248,7 +266,10 @@ services:
       - /home/ismael/downloads:/downloads
       - /home/ismael/tv:/tv
     user: "1026"
-    env_file: stack.env
+    environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8989 || exit 1
       interval: 30s
@@ -275,7 +296,10 @@ services:
       - /home/ismael/downloads:/downloads
       - /home/ismael/movies:/movies
     user: "1026"
-    env_file: stack.env
+    environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:7878 || exit 1
       interval: 30s
@@ -302,7 +326,10 @@ services:
       - /home/ismael/movies:/movies
       - /home/ismael/tv:/tv
     user: "1026"
-    env_file: stack.env
+    environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:6767 || exit 1
       interval: 30s
@@ -374,10 +401,15 @@ services:
     ports:
       - "8010:8000/tcp"
     dns: 192.168.0.250
-    env_file: stack.env
     environment:
       SECRET: ${YAMTRACK_SECRET}
       DB_PASSWORD: ${YAMTRACK_DB_PASSWORD}
+      REDIS_URL: redis://redis-yamtrack:6379
+      DB_HOST: 192.168.0.251
+      DB_NAME: yamtrack
+      DB_USER: yamtrack
+      DB_PORT: "5433"
+      TZ: Europe/Berlin
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
       interval: 30s
@@ -400,6 +432,8 @@ services:
     restart: unless-stopped
     volumes:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
       interval: 10s
@@ -418,6 +452,9 @@ services:
       - "3000:3000"
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
+    environment:
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: http://localhost:3000
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
       interval: 30s
@@ -494,13 +531,13 @@ services:
     volumes:
       - /home/ismael/immich/data:/data
       - /etc/localtime:/etc/localtime:ro
-    env_file: stack.env
     environment:
       DB_PASSWORD: ${IMMICH_DB_PASSWORD}
       DB_USERNAME: ${IMMICH_DB_USERNAME}
       DB_DATABASE_NAME: ${IMMICH_DB_DATABASE_NAME}
       DB_HOSTNAME: immich-database
       REDIS_HOSTNAME: immich-valkey
+      IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
     ports:
       - "2283:2283/tcp"
     user: "1024:100"
@@ -525,7 +562,8 @@ services:
     restart: unless-stopped
     volumes:
       - immich-model-cache:/cache
-    env_file: stack.env
+    environment:
+      IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003"]
       interval: 30s
@@ -546,11 +584,26 @@ services:
     user: "1024:100"
     volumes:
       - /home/ismael/mealie/data:/app/data/
-    env_file: stack.env
     environment:
       POSTGRES_PASSWORD: ${MEALIE_POSTGRES_PASSWORD}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      ALLOW_SIGNUP: "false"
+      TZ: Europe/Madrid
+      BASE_URL: https://mealie.ios-tools.dedyn.io
+      DB_ENGINE: postgres
+      POSTGRES_USER: mealie
+      POSTGRES_SERVER: 192.168.0.251
+      POSTGRES_PORT: "5433"
+      POSTGRES_DB: mealie
+      OIDC_AUTH_ENABLED: "true"
+      OIDC_PROVIDER_NAME: authentik
+      OIDC_CONFIGURATION_URL: https://authentik.ios-tools.dedyn.io/application/o/mealie/.well-known/openid-configuration
+      OIDC_SIGNUP_ENABLED: "true"
+      OIDC_USER_GROUP: mealie-user
+      OIDC_ADMIN_GROUP: mealie-admin
+      OIDC_AUTO_REDIRECT: "true"
+      OIDC_REMEMBER_ME: "true"
     healthcheck:
       test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
       interval: 120s
@@ -592,10 +645,23 @@ services:
       - /home/ismael/paperless/paperless/media:/usr/src/paperless/media
       - /home/ismael/paperless-ngx/export:/usr/src/paperless/export
       - /home/ismael/paperless-ngx/consume:/usr/src/paperless/consume
-    env_file: stack.env
     environment:
       PAPERLESS_DBPASS: ${PAPERLESS_DBPASS}
       PAPERLESS_SOCIALACCOUNT_PROVIDERS: ${PAPERLESS_SOCIALACCOUNT_PROVIDERS}
+      PAPERLESS_REDIS: redis://paperless-broker:6379
+      PAPERLESS_DBHOST: 192.168.0.251
+      PAPERLESS_DBPORT: "5433"
+      PAPERLESS_TIME_ZONE: Europe/Madrid
+      PAPERLESS_OCR_LANGUAGE: spa
+      PAPERLESS_OCR_LANGUAGES: eng
+      PAPERLESS_URL: https://paperless.ios-tools.dedyn.io
+      PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+      PAPERLESS_LOGOUT_REDIRECT_URL: https://authentik.ios-tools.dedyn.io/application/o/paperless/end-session/
+      PAPERLESS_AUTO_CREATE: "true"
+      PAPERLESS_AUTO_LOGIN: "true"
+      PAPERLESS_ENABLE_ALLAUTH: "true"
+      PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS: "true"
+      PAPERLESS_PRE_CONSUME_SCRIPT: /usr/src/paperless/scripts/removepassword.py
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
       interval: 30s
