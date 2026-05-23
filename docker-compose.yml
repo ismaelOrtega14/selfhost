@@ -70,7 +70,7 @@ services:
       - "51820:51820/udp"
       - "21820:21820/udp"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3003 2>/dev/null || curl -sf http://localhost:3003 2>/dev/null || nc -z localhost 3003 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -94,13 +94,14 @@ services:
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
     command:
       - --configFile=/etc/traefik/traefik_config.yml
+      - --ping=true
     environment:
       DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
       TRAEFIK_LOG_LEVEL: DEBUG
       LEGO_EXPERIMENTAL_CNAME_SUPPORT: "true"
       LEGO_DISABLE_CNAME_SUPPORT: "false"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -146,9 +147,9 @@ services:
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_REDIS__HOST: authentik-redis
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9000/-/health/"]
+      test: ["CMD-SHELL", "python3 -c \"import http.client, sys; c=http.client.HTTPConnection('localhost',9000); c.request('GET','/-/health/'); sys.exit(0 if c.getresponse().status==200 else 1)\""]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
       start_period: 30s
     depends_on:
