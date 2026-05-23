@@ -70,7 +70,7 @@ services:
       - "51820:51820/udp"
       - "21820:21820/udp"
     healthcheck:
-      test: ["CMD-SHELL", "cat /proc/net/tcp | grep -qi ':0BBB'"]
+      test: ["CMD-SHELL", "kill -0 1 2>/dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -102,7 +102,7 @@ services:
       LEGO_EXPERIMENTAL_CNAME_SUPPORT: "true"
       LEGO_DISABLE_CNAME_SUPPORT: "false"
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      test: ["CMD", "traefik", "healthcheck", "--ping", "--ping-entrypoint=web"]
       interval: 15s
       timeout: 5s
       retries: 3
