@@ -376,8 +376,8 @@ services:
     dns: 192.168.0.250
     env_file: stack.env
     environment:
-      SECRET: ${SECRET}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET: ${YAMTRACK_SECRET}
+      DB_PASSWORD: ${YAMTRACK_DB_PASSWORD}
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
       interval: 30s

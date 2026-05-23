@@ -23,8 +23,8 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 | `AUTHENTIK_POSTGRESQL__PASSWORD` | authentik |
 | `AUTHENTIK_SECRET_KEY` | authentik |
 | `TRANSMISSION_PASSWORD` | transmission |
-| `SECRET` | yamtrack |
-| `DB_PASSWORD` | yamtrack |
+| `YAMTRACK_SECRET` | yamtrack |
+| `YAMTRACK_DB_PASSWORD` | yamtrack |
 | `IMMICH_DB_PASSWORD` | immich |
 | `IMMICH_DB_USERNAME` | immich |
 | `IMMICH_DB_DATABASE_NAME` | immich |
