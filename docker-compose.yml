@@ -1,0 +1,484 @@
+# =====================================================================
+# selfhost — unified compose
+# Orden de arranque: network → security → notflix → tracker → resto
+# Portainer: desplegar como "Compose" stack (no Swarm)
+# Env vars: gestionar en stack.env desde Portainer
+# =====================================================================
+
+services:
+  # ===================================================================
+  # NIVEL 1 — network (DNS base)
+  # ===================================================================
+  dns-server:
+    image: technitium/dns-server:latest
+    restart: on-failure
+    ports:
+      - "5380:5380/tcp"   # DNS web console (HTTP)
+      - "53:53/tcp"       # DNS service
+      - "53:53/udp"       # DNS service
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+    volumes:
+      - /home/ismael/technitium/config:/etc/dns
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # ===================================================================
+  # NIVEL 2 — security (pangolin + authentik + traefik)
+  # ===================================================================
+  redis-authentik:
+    image: redis:7-alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - redis-authentik:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      timeout: 3s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  pangolin:
+    image: fosrl/pangolin:latest
+    restart: on-failure
+    volumes:
+      - /home/ismael/pangolin/pangolin/config:/app/config
+    env_file: stack.env
+    networks:
+      - pangolin_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  gerbil:
+    image: fosrl/gerbil:1.0.0
+    restart: on-failure
+    command:
+      - --reachableAt=http://gerbil:3003
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/gerbil/get-config
+      - --reportBandwidthTo=http://pangolin:3001/api/v1/gerbil/receive-bandwidth
+    volumes:
+      - /home/ismael/pangolin/gerbil:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - pangolin_net
+    ports:
+      - "51820:51820/udp"
+      - "21820:21820/udp"
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      pangolin:
+        condition: service_healthy
+
+  traefik:
+    image: traefik:latest
+    restart: unless-stopped
+    networks:
+      - pangolin_net
+    ports:
+      - "443:443/tcp"
+      - "80:80/tcp"
+    volumes:
+      - /home/ismael/pangolin/traefik/config:/etc/traefik
+      - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      pangolin:
+        condition: service_healthy
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    command: server
+    restart: unless-stopped
+    ports:
+      - "9433:9443/tcp"
+      - "9900:9000/tcp"
+    volumes:
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      redis-authentik:
+        condition: service_healthy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    command: worker
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/certs:/certs
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      redis-authentik:
+        condition: service_healthy
+
+  # ===================================================================
+  # NIVEL 3 — notflix (transmission + *arr + seerr)
+  # ===================================================================
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    restart: on-failure
+    ports:
+      - "9091:9091/tcp"
+    volumes:
+      - /home/ismael/transmission/config:/config
+      - /home/ismael/downloads:/downloads
+      - /home/ismael/transmission/torrents:/watch
+    user: "1026"
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    restart: on-failure
+    ports:
+      - "8989:8989/tcp"
+    volumes:
+      - /home/ismael/sonarr/config:/config
+      - /home/ismael/downloads:/downloads
+      - /home/ismael/tv:/tv
+    user: "1026"
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    restart: on-failure
+    ports:
+      - "7878:7878/tcp"
+    volumes:
+      - /home/ismael/radarr/config:/config
+      - /home/ismael/downloads:/downloads
+      - /home/ismael/movies:/movies
+    user: "1026"
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    restart: on-failure
+    ports:
+      - "9117:9117/tcp"
+    volumes:
+      - /home/ismael/jackett/config:/config
+      - /home/ismael/jackettBlackhole:/downloads
+    user: "1026"
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    restart: on-failure
+    ports:
+      - "6767:6767/tcp"
+    volumes:
+      - /home/ismael/bazarr/config:/config
+      - /home/ismael/movies:/movies
+      - /home/ismael/tv:/tv
+    user: "1026"
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: on-failure
+    environment:
+      - LOG_LEVEL=info
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    restart: on-failure
+    ports:
+      - "5055:5055/tcp"
+    user: "1026"
+    volumes:
+      - /home/ismael/seerr/config:/app/config
+    dns: 192.168.0.250
+    environment:
+      - PORT=5055
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  # ===================================================================
+  # NIVEL 4 — tracker (yamtrack)
+  # ===================================================================
+  redis-yamtrack:
+    image: redis:7-alpine
+    restart: on-failure
+    volumes:
+      - redis-yamtrack:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  yamtrack:
+    image: ghcr.io/fuzzygrim/yamtrack
+    restart: on-failure
+    ports:
+      - "8010:8000/tcp"
+    dns: 192.168.0.250
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      redis-yamtrack:
+        condition: service_healthy
+
+  # ===================================================================
+  # NIVEL 5 — resto (bookmarks, budget, drive, maintenance, mealie, n8n, paperless)
+  # ===================================================================
+  # --- bookmarks ---
+  meilisearch:
+    image: getmeili/meilisearch:v1.12.8
+    restart: unless-stopped
+    env_file: stack.env
+    volumes:
+      - /home/ismael/bookmarks/meilisearch/data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:latest
+    restart: unless-stopped
+    env_file: stack.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - /home/ismael/bookmarks/linkwarden/data:/data/data
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+
+  # --- budget ---
+  actual-budget:
+    image: actualbudget/actual-server:latest
+    restart: unless-stopped
+    ports:
+      - "5006:5006/tcp"
+    volumes:
+      - /home/ismael/actualBudget/data:/data
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  # --- drive (immich) ---
+  immich-valkey:
+    image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  immich-database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    shm_size: 128mb
+    user: "1024:100"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    restart: unless-stopped
+    volumes:
+      - ${UPLOAD_LOCATION}:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_DATABASE_NAME: ${DB_DATABASE_NAME}
+    env_file: stack.env
+    ports:
+      - "2283:2283/tcp"
+    user: "1024:100"
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      immich-database:
+        condition: service_healthy
+      immich-valkey:
+        condition: service_healthy
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    restart: unless-stopped
+    volumes:
+      - immich-model-cache:/cache
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      immich-server:
+        condition: service_healthy
+
+  # --- maintenance ---
+  shepherd:
+    build: .
+    image: containrrr/shepherd
+    restart: on-failure
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  # --- mealie ---
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    restart: on-failure
+    ports:
+      - "9925:9000/tcp"
+    user: "1024:100"
+    volumes:
+      - /home/ismael/mealie/data:/app/data/
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
+      interval: 120s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  # --- n8n ---
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: on-failure
+    ports:
+      - "5678:5678/tcp"
+    volumes:
+      - /home/ismael/n8n/n8n_data:/home/node/.n8n
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  # --- paperless ---
+  paperless-broker:
+    image: docker.io/library/redis:8
+    restart: unless-stopped
+    volumes:
+      - paperless-redis:/data
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
+  paperless-webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: on-failure
+    ports:
+      - "8998:8000/tcp"
+    user: "1024:100"
+    volumes:
+      - /home/ismael/paperless/paperless/scripts:/usr/src/paperless/scripts
+      - /home/ismael/paperless/paperless/data:/usr/src/paperless/data
+      - /home/ismael/paperless/paperless/media:/usr/src/paperless/media
+      - /home/ismael/paperless-ngx/export:/usr/src/paperless/export
+      - /home/ismael/paperless-ngx/consume:/usr/src/paperless/consume
+    env_file: stack.env
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      paperless-broker:
+        condition: service_started
+
+# ===================================================================
+# Volumes
+# ===================================================================
+volumes:
+  redis-authentik:
+  redis-yamtrack:
+  immich-model-cache:
+  paperless-redis:
+
+# ===================================================================
+# Networks
+# ===================================================================
+networks:
+  pangolin_net:
+    driver: bridge
