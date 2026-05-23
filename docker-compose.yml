@@ -94,15 +94,8 @@ services:
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
     command:
       - --configFile=/etc/traefik/traefik_config.yml
-      - --ping=true
-      - --api.insecure=true
-    environment:
-      DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
-      TRAEFIK_LOG_LEVEL: DEBUG
-      LEGO_EXPERIMENTAL_CNAME_SUPPORT: "true"
-      LEGO_DISABLE_CNAME_SUPPORT: "false"
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      test: ["CMD", "traefik", "version"]
       interval: 15s
       timeout: 5s
       retries: 3
