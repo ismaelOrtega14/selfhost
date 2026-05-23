@@ -102,7 +102,7 @@ services:
       LEGO_EXPERIMENTAL_CNAME_SUPPORT: "true"
       LEGO_DISABLE_CNAME_SUPPORT: "false"
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping", "--ping-entrypoint=web"]
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 15s
       timeout: 5s
       retries: 3
