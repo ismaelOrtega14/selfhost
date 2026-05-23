@@ -537,7 +537,7 @@ services:
       - "2283:2283/tcp"
     user: "1024:100"
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:2283/server-info/version || exit 1
+      test: node -e "require('http').get('http://127.0.0.1:2283/server-info/version').on('response',r=>process.exit(r.statusCode==200?0:1)).on('error',()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       retries: 3
