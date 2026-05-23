@@ -1,2 +1,9 @@
-# selfhost
-Selfhosting bookmarks manager
+# selfhost — Bookmarks
+
+Linkwarden + Meilisearch
+
+## Deploy
+
+```bash
+docker compose up -d
+```

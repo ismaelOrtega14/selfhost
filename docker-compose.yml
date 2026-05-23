@@ -1,0 +1,24 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.12.8
+    restart: unless-stopped
+    env_file: stack.env
+    volumes:
+      - /home/ismael/bookmarks/meilisearch/data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7700/health"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:latest
+    restart: unless-stopped
+    env_file: stack.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - /home/ismael/bookmarks/linkwarden/data:/data/data
+    depends_on:
+      meilisearch:
+        condition: service_healthy
