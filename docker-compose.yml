@@ -202,7 +202,7 @@ services:
       USER: ismael
       PASS: ${TRANSMISSION_PASSWORD}
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9091 2>&1 || [ $? -eq 8 ]
+      test: curl -s http://127.0.0.1:9091 > /dev/null || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
@@ -245,7 +245,7 @@ services:
       TZ: Europe/Madrid
       AUTO_UPDATE: "true"
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:9117 || exit 1
+      test: curl -s http://127.0.0.1:9117 > /dev/null || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
