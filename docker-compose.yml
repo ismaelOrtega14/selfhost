@@ -202,7 +202,7 @@ services:
       USER: ismael
       PASS: ${TRANSMISSION_PASSWORD}
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:9091 || exit 1
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9091 || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
