@@ -1,4 +1,11 @@
-# selfhost
-My diferent selfhosts docker-compose.yml and envfiles
+# selfhost — Network
 
-TODO: Some migrations left
+Technitium DNS Server
+
+## Deploy
+
+```bash
+docker compose up -d
+```
+
+DNS console en `http://<host>:5380`.

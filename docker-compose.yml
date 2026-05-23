@@ -1,0 +1,19 @@
+services:
+  dns-server:
+    image: technitium/dns-server:latest
+    restart: on-failure
+    ports:
+      - "5380:5380/tcp"   # DNS web console (HTTP)
+      - "53:53/tcp"       # DNS service
+      - "53:53/udp"       # DNS service
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+    volumes:
+      - /home/ismael/technitium/config:/etc/dns
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
