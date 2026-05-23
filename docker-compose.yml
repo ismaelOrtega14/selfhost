@@ -472,7 +472,7 @@ services:
     volumes:
       - /home/ismael/actualBudget/data:/data
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5006 || exit 1
+      test: curl -s http://127.0.0.1:5006 > /dev/null || exit 1
       interval: 30s
       timeout: 5s
       retries: 3
