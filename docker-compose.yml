@@ -1,8 +1,7 @@
 # =====================================================================
 # selfhost — unified compose
-# Orden de arranque: network → security → notflix → tracker → resto
-# Portainer: desplegar como "Compose" stack (no Swarm)
-# Env vars: gestionar en stack.env desde Portainer
+# Orden: network → security → notflix → tracker → resto
+# Env vars via env_file: stack.env; secretos via ${VAR} desde Portainer
 # =====================================================================
 
 services:
@@ -13,9 +12,9 @@ services:
     image: technitium/dns-server:latest
     restart: on-failure
     ports:
-      - "5380:5380/tcp"   # DNS web console (HTTP)
-      - "53:53/tcp"       # DNS service
-      - "53:53/udp"       # DNS service
+      - "5380:5380/tcp"
+      - "53:53/tcp"
+      - "53:53/udp"
     sysctls:
       - net.ipv4.ip_local_port_range=1024 65000
     volumes:
@@ -31,30 +30,16 @@ services:
   # ===================================================================
   # NIVEL 2 — security (pangolin + authentik + traefik)
   # ===================================================================
-  redis-authentik:
-    image: redis:7-alpine
-    command: --save 60 1 --loglevel warning
-    restart: unless-stopped
-    volumes:
-      - redis-authentik:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 30s
-      retries: 5
-      start_period: 20s
-      timeout: 3s
-    depends_on:
-      dns-server:
-        condition: service_healthy
-
   pangolin:
     image: fosrl/pangolin:latest
     restart: on-failure
     volumes:
       - /home/ismael/pangolin/pangolin/config:/app/config
-    env_file: stack.env
     networks:
       - pangolin_net
+    env_file: stack.env
+    environment:
+      SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
       interval: 3s
@@ -83,6 +68,12 @@ services:
     ports:
       - "51820:51820/udp"
       - "21820:21820/udp"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       dns-server:
         condition: service_healthy
@@ -103,10 +94,34 @@ services:
     command:
       - --configFile=/etc/traefik/traefik_config.yml
     env_file: stack.env
+    environment:
+      DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       dns-server:
         condition: service_healthy
       pangolin:
+        condition: service_healthy
+
+  authentik-redis:
+    image: redis:7-alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - redis-authentik:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      timeout: 3s
+    depends_on:
+      dns-server:
         condition: service_healthy
 
   authentik-server:
@@ -120,10 +135,19 @@ services:
       - /home/ismael/authentik/media:/media
       - /home/ismael/authentik/custom-templates:/templates
     env_file: stack.env
+    environment:
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9000/-/health/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       dns-server:
         condition: service_healthy
-      redis-authentik:
+      authentik-redis:
         condition: service_healthy
 
   authentik-worker:
@@ -136,14 +160,17 @@ services:
       - /home/ismael/authentik/certs:/certs
       - /home/ismael/authentik/custom-templates:/templates
     env_file: stack.env
+    environment:
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
     depends_on:
       dns-server:
         condition: service_healthy
-      redis-authentik:
+      authentik-redis:
         condition: service_healthy
 
   # ===================================================================
-  # NIVEL 3 — notflix (transmission + *arr + seerr)
+  # NIVEL 3 — notflix
   # ===================================================================
   transmission:
     image: lscr.io/linuxserver/transmission:latest
@@ -156,8 +183,59 @@ services:
       - /home/ismael/transmission/torrents:/watch
     user: "1026"
     env_file: stack.env
+    environment:
+      PASS: ${TRANSMISSION_PASSWORD}
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:9091 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
+        condition: service_healthy
+      authentik-server:
+        condition: service_healthy
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: on-failure
+    environment:
+      LOG_LEVEL: info
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8191/health || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      authentik-server:
+        condition: service_healthy
+
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    restart: on-failure
+    ports:
+      - "9117:9117/tcp"
+    volumes:
+      - /home/ismael/jackett/config:/config
+      - /home/ismael/jackettBlackhole:/downloads
+    user: "1026"
+    env_file: stack.env
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:9117 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      flaresolverr:
+        condition: service_healthy
+      authentik-server:
         condition: service_healthy
 
   sonarr:
@@ -171,8 +249,20 @@ services:
       - /home/ismael/tv:/tv
     user: "1026"
     env_file: stack.env
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8989 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
+        condition: service_healthy
+      transmission:
+        condition: service_healthy
+      jackett:
+        condition: service_healthy
+      authentik-server:
         condition: service_healthy
 
   radarr:
@@ -186,22 +276,20 @@ services:
       - /home/ismael/movies:/movies
     user: "1026"
     env_file: stack.env
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:7878 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
-
-  jackett:
-    image: lscr.io/linuxserver/jackett:latest
-    restart: on-failure
-    ports:
-      - "9117:9117/tcp"
-    volumes:
-      - /home/ismael/jackett/config:/config
-      - /home/ismael/jackettBlackhole:/downloads
-    user: "1026"
-    env_file: stack.env
-    depends_on:
-      dns-server:
+      transmission:
+        condition: service_healthy
+      jackett:
+        condition: service_healthy
+      authentik-server:
         condition: service_healthy
 
   bazarr:
@@ -215,17 +303,20 @@ services:
       - /home/ismael/tv:/tv
     user: "1026"
     env_file: stack.env
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:6767 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
-
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    restart: on-failure
-    environment:
-      - LOG_LEVEL=info
-    depends_on:
-      dns-server:
+      transmission:
+        condition: service_healthy
+      jackett:
+        condition: service_healthy
+      authentik-server:
         condition: service_healthy
 
   seerr:
@@ -238,7 +329,7 @@ services:
       - /home/ismael/seerr/config:/app/config
     dns: 192.168.0.250
     environment:
-      - PORT=5055
+      PORT: 5055
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
       start_period: 20s
@@ -248,9 +339,17 @@ services:
     depends_on:
       dns-server:
         condition: service_healthy
+      sonarr:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
+      bazarr:
+        condition: service_healthy
+      authentik-server:
+        condition: service_healthy
 
   # ===================================================================
-  # NIVEL 4 — tracker (yamtrack)
+  # NIVEL 4 — tracker
   # ===================================================================
   redis-yamtrack:
     image: redis:7-alpine
@@ -266,6 +365,8 @@ services:
     depends_on:
       dns-server:
         condition: service_healthy
+      seerr:
+        condition: service_healthy
 
   yamtrack:
     image: ghcr.io/fuzzygrim/yamtrack
@@ -274,20 +375,29 @@ services:
       - "8010:8000/tcp"
     dns: 192.168.0.250
     env_file: stack.env
+    environment:
+      SECRET: ${SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
       redis-yamtrack:
         condition: service_healthy
+      seerr:
+        condition: service_healthy
 
   # ===================================================================
-  # NIVEL 5 — resto (bookmarks, budget, drive, maintenance, mealie, n8n, paperless)
+  # NIVEL 5 — resto
   # ===================================================================
-  # --- bookmarks ---
   meilisearch:
     image: getmeili/meilisearch:v1.12.8
     restart: unless-stopped
-    env_file: stack.env
     volumes:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
     healthcheck:
@@ -298,22 +408,30 @@ services:
     depends_on:
       dns-server:
         condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
   linkwarden:
     image: ghcr.io/linkwarden/linkwarden:latest
     restart: unless-stopped
-    env_file: stack.env
     ports:
       - "3000:3000"
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
       meilisearch:
         condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
-  # --- budget ---
   actual-budget:
     image: actualbudget/actual-server:latest
     restart: unless-stopped
@@ -321,11 +439,18 @@ services:
       - "5006:5006/tcp"
     volumes:
       - /home/ismael/actualBudget/data:/data
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5006 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
-  # --- drive (immich) ---
   immich-valkey:
     image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
     restart: unless-stopped
@@ -337,48 +462,62 @@ services:
     depends_on:
       dns-server:
         condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
   immich-database:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: ${IMMICH_DB_USERNAME}
+      POSTGRES_DB: ${IMMICH_DB_DATABASE_NAME}
       POSTGRES_INITDB_ARGS: --data-checksums
     volumes:
-      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+      - /home/ismael/immich/postgres:/var/lib/postgresql/data
     shm_size: 128mb
     user: "1024:100"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${IMMICH_DB_USERNAME} -d ${IMMICH_DB_DATABASE_NAME}"]
       interval: 10s
       retries: 5
       start_period: 20s
     depends_on:
       dns-server:
         condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
   immich-server:
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     restart: unless-stopped
     volumes:
-      - ${UPLOAD_LOCATION}:/data
+      - /home/ismael/immich/data:/data
       - /etc/localtime:/etc/localtime:ro
-    environment:
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_DATABASE_NAME: ${DB_DATABASE_NAME}
     env_file: stack.env
+    environment:
+      DB_PASSWORD: ${IMMICH_DB_PASSWORD}
+      DB_USERNAME: ${IMMICH_DB_USERNAME}
+      DB_DATABASE_NAME: ${IMMICH_DB_DATABASE_NAME}
+      DB_HOSTNAME: immich-database
+      REDIS_HOSTNAME: immich-valkey
     ports:
       - "2283:2283/tcp"
     user: "1024:100"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:2283/server-info/version || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       dns-server:
         condition: service_healthy
       immich-database:
         condition: service_healthy
       immich-valkey:
+        condition: service_healthy
+      yamtrack:
         condition: service_healthy
 
   immich-machine-learning:
@@ -387,25 +526,18 @@ services:
     volumes:
       - immich-model-cache:/cache
     env_file: stack.env
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3003"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       dns-server:
         condition: service_healthy
       immich-server:
         condition: service_healthy
 
-  # --- maintenance ---
-  shepherd:
-    build: .
-    image: containrrr/shepherd
-    restart: on-failure
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file: stack.env
-    depends_on:
-      dns-server:
-        condition: service_healthy
-
-  # --- mealie ---
   mealie:
     image: ghcr.io/mealie-recipes/mealie:latest
     restart: on-failure
@@ -415,6 +547,10 @@ services:
     volumes:
       - /home/ismael/mealie/data:/app/data/
     env_file: stack.env
+    environment:
+      POSTGRES_PASSWORD: ${MEALIE_POSTGRES_PASSWORD}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
     healthcheck:
       test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
       interval: 120s
@@ -424,28 +560,24 @@ services:
     depends_on:
       dns-server:
         condition: service_healthy
-
-  # --- n8n ---
-  n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
-    restart: on-failure
-    ports:
-      - "5678:5678/tcp"
-    volumes:
-      - /home/ismael/n8n/n8n_data:/home/node/.n8n
-    env_file: stack.env
-    depends_on:
-      dns-server:
+      yamtrack:
         condition: service_healthy
 
-  # --- paperless ---
   paperless-broker:
     image: docker.io/library/redis:8
     restart: unless-stopped
     volumes:
       - paperless-redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       dns-server:
+        condition: service_healthy
+      yamtrack:
         condition: service_healthy
 
   paperless-webserver:
@@ -461,14 +593,23 @@ services:
       - /home/ismael/paperless-ngx/export:/usr/src/paperless/export
       - /home/ismael/paperless-ngx/consume:/usr/src/paperless/consume
     env_file: stack.env
+    environment:
+      PAPERLESS_DBPASS: ${PAPERLESS_DBPASS}
+      PAPERLESS_SOCIALACCOUNT_PROVIDERS: ${PAPERLESS_SOCIALACCOUNT_PROVIDERS}
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       dns-server:
         condition: service_healthy
       paperless-broker:
-        condition: service_started
+        condition: service_healthy
+      yamtrack:
+        condition: service_healthy
 
-# ===================================================================
-# Volumes
 # ===================================================================
 volumes:
   redis-authentik:
@@ -476,9 +617,6 @@ volumes:
   immich-model-cache:
   paperless-redis:
 
-# ===================================================================
-# Networks
-# ===================================================================
 networks:
   pangolin_net:
     driver: bridge
