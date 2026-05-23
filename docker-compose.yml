@@ -450,7 +450,7 @@ services:
     environment:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: http://localhost:3000
-      DATABASE_URL: postgresql://linkwarden:${LINKWARDEN_DB_PASSWORD}@192.168.0.251:5433/linkwarden
+      DATABASE_URL: ${LINKWARDEN_DATABASE_URL}
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:3000').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s
