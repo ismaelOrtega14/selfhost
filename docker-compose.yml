@@ -534,6 +534,7 @@ services:
       DB_HOSTNAME: immich-database
       REDIS_HOSTNAME: immich-valkey
       IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
+      IMMICH_IGNORE_MOUNT_CHECK_ERRORS: "true"
     ports:
       - "2283:2283/tcp"
     user: "1024:100"
