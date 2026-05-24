@@ -697,6 +697,7 @@ services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     restart: unless-stopped
+    entrypoint: []
     ports:
       - "3002:3000/tcp"
     volumes:
