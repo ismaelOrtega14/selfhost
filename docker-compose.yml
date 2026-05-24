@@ -470,7 +470,7 @@ services:
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
     environment:
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_SECRET: ${LINKWARDEN_NEXTAUTH_SECRET}
       NEXTAUTH_URL: http://localhost:3000
       DATABASE_URL: ${LINKWARDEN_DATABASE_URL}
     healthcheck:
