@@ -561,12 +561,6 @@ services:
       - immich-model-cache:/cache
     environment:
       IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3003"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
     depends_on:
       dns-server:
         condition: service_healthy
