@@ -427,6 +427,7 @@ services:
       DB_USER: yamtrack
       DB_PORT: "5433"
       TZ: Europe/Berlin
+      HARDCOVER_API: ${YAMTRACK_HARDCOVER_KEY}
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8000 || exit 1
       interval: 30s
