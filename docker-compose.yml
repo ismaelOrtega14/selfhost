@@ -475,7 +475,7 @@ services:
       DATABASE_URL: ${LINKWARDEN_DATABASE_URL}
       NEXT_PUBLIC_AUTHENTIK_ENABLED: true
       AUTHENTIK_CUSTOM_NAME: authentik
-      AUTHENTIK_ISSUER: https://authentik.ios-tools.dedyn.io/application/o/linkwarden/
+      AUTHENTIK_ISSUER: https://authentik.ios-tools.dedyn.io/application/o/linkwarden
       AUTHENTIK_CLIENT_ID: ${LINKWARDEN_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${LINKWARDEN_CLIENT_SECRET}
     healthcheck:
