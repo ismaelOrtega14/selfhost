@@ -35,7 +35,7 @@ services:
     ports:
       - "3001:3001/tcp"
     volumes:
-      - /home/ismael/uptime-kuma/data:/app/data
+      - /home/ismael/uptimeKuma/data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:3001').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
