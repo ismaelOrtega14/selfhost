@@ -32,6 +32,7 @@ services:
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     restart: unless-stopped
+    entrypoint: []
     user: "1024:100"
     ports:
       - "3001:3001/tcp"
