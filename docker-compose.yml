@@ -698,6 +698,10 @@ services:
     image: ghcr.io/gethomepage/homepage:latest
     restart: unless-stopped
     entrypoint: []
+    group_add:
+      - "992"
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.0.250:3002,homepage.ios-tools.dedyn.io,localhost:3002
     ports:
       - "3002:3000/tcp"
     volumes:
