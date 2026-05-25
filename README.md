@@ -6,15 +6,36 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 
 | Nivel | Servicios |
 |-------|-----------|
-| 1 | dns-server |
-| 2 | pangolin, gerbil, traefik, authentik-redis, authentik-server, authentik-worker |
+| 1 | dns-server, uptime-kuma |
+| 2 | authentik-redis, authentik-server, authentik-worker |
 | 3 | transmission, flaresolverr, jackett, sonarr, radarr, bazarr, seerr |
 | 4 | redis-yamtrack, yamtrack |
-| 5 | meilisearch, linkwarden, actual-budget, immich (valkey+database+server+ml), mealie, paperless (broker+webserver) |
+| 5 | meilisearch, linkwarden, actual-budget, immich-*, mealie, paperless-*, homepage |
+| 6 | pangolin, gerbil, traefik |
 
-## Env vars
+## Puertos destacados
 
-### Secretos (${VAR} en compose — rellenar en Portainer)
+| Puerto | Servicio |
+|--------|----------|
+| 5380 | Technitium DNS |
+| 3001 | Uptime Kuma |
+| 3002 | Homepage |
+| 9091 | Transmission |
+| 8191 | Flaresolverr |
+| 9117 | Jackett |
+| 8989 | Sonarr |
+| 7878 | Radarr |
+| 6767 | Bazarr |
+| 5055 | Seerr |
+| 8010 | Yamtrack |
+| 3000 | Linkwarden |
+| 5006 | Actual Budget |
+| 2283 | Immich |
+| 9925 | Mealie |
+| 8998 | Paperless |
+| 51820/udp | Gerbil (WireGuard) |
+
+## Secretos (${VAR} en compose — rellenar en Portainer)
 
 | Variable | Servicio |
 |----------|----------|
@@ -34,22 +55,10 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 | `OIDC_CLIENT_SECRET` | mealie |
 | `PAPERLESS_DBPASS` | paperless |
 | `PAPERLESS_SOCIALACCOUNT_PROVIDERS` | paperless |
-
-### No sensibles (stack.env con valores por defecto)
-
-| Variable | Servicio |
-|----------|----------|
-| `TZ`, `PUID`, `PGID` | general |
-| `DNS_SERVER_DOMAIN`, `DNS_SERVER_FORWARDERS` | dns-server |
-| `TRAEFIK_LOG_LEVEL`, `LEGO_*` | traefik |
-| `AUTHENTIK_POSTGRESQL__HOST/PORT/NAME/USER`, `AUTHENTIK_REDIS__HOST` | authentik |
-| `USER` | transmission |
-| `AUTO_UPDATE` | jackett |
-| `REDIS_URL`, `DB_HOST/NAME/USER/PORT` | yamtrack |
-| `NEXTAUTH_URL` | linkwarden |
-| `IMMICH_MACHINE_LEARNING_MEMORY_LIMIT` | immich |
-| `ALLOW_SIGNUP`, `BASE_URL`, `DB_ENGINE`, `POSTGRES_USER/SERVER/PORT/DB`, `OIDC_*` | mealie |
-| `PAPERLESS_REDIS`, `PAPERLESS_DBHOST/PORT`, `PAPERLESS_TIME_ZONE`, `PAPERLESS_OCR_*`, `PAPERLESS_URL`, `PAPERLESS_AUTO_*`, `PAPERLESS_ENABLE_*`, `PAPERLESS_PRE_CONSUME_SCRIPT` | paperless |
+| `LINKWARDEN_NEXTAUTH_SECRET` | linkwarden |
+| `LINKWARDEN_DATABASE_URL` | linkwarden |
+| `LINKWARDEN_CLIENT_ID` | linkwarden |
+| `LINKWARDEN_CLIENT_SECRET` | linkwarden |
 
 ## Deploy
 

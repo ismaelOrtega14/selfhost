@@ -5,21 +5,57 @@ Repositorio unificado de servicios self-hosted gestionado con Docker Compose v2 
 ## Estructura
 
 - **Un solo stack** en `main` con todos los servicios en `docker-compose.yml`
-- Las ramas por servicio (`network`, `security`, `notflix`, `tracker`, etc.) se mantienen como histórico pero no se usan para deploy
-- Las variables de entorno se gestionan desde Portainer con `stack.env` (no hay `.env` en el repo)
-- Sin secrets de Swarm — `env_file: stack.env` + secretos como `${VAR}` sustituidos por Portainer
+- Sin `.env` en el repo — secretos como `${VAR}` sustituidos por Portainer en el deploy
+- Valores no sensibles como **literales** en `environment:` (no `env_file`)
+
+## Servicios (29)
+
+| Nivel | Servicios |
+|-------|-----------|
+| 1 | `dns-server`, `uptime-kuma` |
+| 2 | `authentik-redis`, `authentik-server`, `authentik-worker` |
+| 3 | `transmission`, `flaresolverr`, `jackett`, `sonarr`, `radarr`, `bazarr`, `seerr` |
+| 4 | `redis-yamtrack`, `yamtrack` |
+| 5 | `meilisearch`, `linkwarden`, `actual-budget`, `immich-*`, `mealie`, `paperless-*`, `homepage` |
+| 6 | `pangolin`, `gerbil`, `traefik` |
 
 ## Orden de arranque
 
-Definido mediante `depends_on` con healthchecks, en 5 niveles:
+Definido mediante `depends_on` con healthchecks. Cada nivel depende de `dns-server` + servicio(s) del nivel anterior. Nivel 6 (reverse proxy) arranca el último para que todos los servicios estén ya operativos.
 
-| Nivel | Servicios clave                                           |
-|-------|-----------------------------------------------------------|
-| 1     | `dns-server` (Technitium DNS)                            |
-| 2     | `pangolin`, `gerbil`, `traefik`, `authentik`             |
-| 3     | `transmission`, `flaresolverr`, `jackett`, `sonarr`, `radarr`, `bazarr`, `seerr` |
-| 4     | `yamtrack`, `redis-yamtrack`                             |
-| 5     | `linkwarden`, `meilisearch`, `actual-budget`, `immich`, `mealie`, `paperless` |
+## Convenciones
+
+- No usar `version:` en compose.yml (obsoleto en Compose v2)
+- Puerto en formato corto: `"host:container/protocol"` (ej: `"3002:3000/tcp"`)
+- `restart: unless-stopped` en todos los servicios
+- Healthchecks según herramientas disponibles en cada imagen: `wget`, `curl`, `node`, `python3`, `kill -0`, comando nativo
+- Servicios con monturas NFS (`uptime-kuma`, `homepage`): `entrypoint: []` para evitar `chown` fallido
+- Acceso a socket Docker: `group_add: ["992"]` montando `/var/run/docker.sock`
+
+## Healthchecks
+
+| Servicio | Healthcheck |
+|----------|-------------|
+| dns-server | `curl -sf http://127.0.0.1:5380` |
+| uptime-kuma | `node` con `http.get` |
+| authentik-server | `python3` contra `/-/health/ready/` |
+| authentik-worker | `python3` contra authentik-server |
+| transmission | `curl -s` (acepta 401 como servidor vivo) |
+| flaresolverr | `curl -sf /health` |
+| jackett, sonarr, radarr, bazarr | `curl -s` |
+| seerr | `node` con `http.get` |
+| yamtrack | `curl -sf /health` |
+| linkwarden | `node` con `http.get` |
+| actual-budget | `curl -s` |
+| immich-server | `node` con timeout 15s |
+| immich-machine-learning | built-in (`python3 healthcheck.py`) |
+| mealie | `timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000'` |
+| paperless-broker | `redis-cli ping | grep PONG` |
+| paperless-webserver | `curl -s` |
+| homepage | `wget -qO- http://127.0.0.1:3000/api/healthcheck` |
+| pangolin | `kill -0 1` |
+| gerbil | `wget -qO- http://127.0.0.1:3003/api/v1/config` |
+| traefik | `traefik version` |
 
 ## Comandos
 
@@ -28,18 +64,53 @@ docker compose up -d                        # Deploy completo
 docker compose up -d <service>              # Servicio específico
 docker compose logs -f <service>            # Logs
 docker compose ps                           # Estado
+docker compose pull <service>               # Actualizar imagen
 ```
 
-## Convenciones
+## Puertos destacados
 
-- No usar `version:` en compose.yml (obsoleto en Compose v2)
-- Puerto en formato corto: `"host:container/protocol"` (ej: `"3000:3000/tcp"`)
-- `restart:` en vez de `deploy.restart_policy`
-- No usar `deploy.replicas`, `mode: host`, ni `external: true` en secrets
-- Overlay networks convertidas a bridge
+| Puerto | Servicio |
+|--------|----------|
+| 5380 | Technitium DNS |
+| 3001 | Uptime Kuma |
+| 80/443 | Traefik |
+| 9091 | Transmission |
+| 8191 | Flaresolverr |
+| 9117 | Jackett |
+| 8989 | Sonarr |
+| 7878 | Radarr |
+| 6767 | Bazarr |
+| 5055 | Seerr |
+| 8010 | Yamtrack |
+| 3000 | Linkwarden |
+| 5006 | Actual Budget |
+| 2283 | Immich |
+| 9925 | Mealie |
+| 8998 | Paperless |
+| 3002 | Homepage |
+| 51820/udp | Gerbil (WireGuard) |
 
-## Stack.env (Portainer)
+## Secretos (${VAR} en compose — rellenar en Portainer)
 
-- Cada servicio carga `env_file: stack.env`
-- Las rutas `/run/secrets/...` del Swarm original se convierten a variables directas
-- Secretos (passwords, tokens) en `environment:` con `${VAR}` — Portainer los sustituye en el deploy
+| Variable | Servicio |
+|----------|----------|
+| `PANGOLIN_SERVER_SECRET` | pangolin |
+| `TRAEFIK_DESEC_TOKEN` | traefik |
+| `AUTHENTIK_POSTGRESQL__PASSWORD` | authentik |
+| `AUTHENTIK_SECRET_KEY` | authentik |
+| `TRANSMISSION_PASSWORD` | transmission |
+| `YAMTRACK_SECRET` | yamtrack |
+| `YAMTRACK_DB_PASSWORD` | yamtrack |
+| `IMMICH_DB_PASSWORD` | immich |
+| `IMMICH_DB_USERNAME` | immich |
+| `IMMICH_DB_DATABASE_NAME` | immich |
+| `IMMICH_VERSION` | immich (default: release) |
+| `MEALIE_POSTGRES_PASSWORD` | mealie |
+| `OIDC_CLIENT_ID` | mealie |
+| `OIDC_CLIENT_SECRET` | mealie |
+| `PAPERLESS_DBPASS` | paperless |
+| `PAPERLESS_SOCIALACCOUNT_PROVIDERS` | paperless |
+| `LINKWARDEN_NEXTAUTH_SECRET` | linkwarden |
+| `LINKWARDEN_DATABASE_URL` | linkwarden |
+| `LINKWARDEN_CLIENT_ID` | linkwarden |
+| `LINKWARDEN_CLIENT_SECRET` | linkwarden |
