@@ -322,7 +322,7 @@ services:
   # NIVEL 4 — tracker
   # ===================================================================
   redis-yamtrack:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
     volumes:
       - redis-yamtrack:/data
