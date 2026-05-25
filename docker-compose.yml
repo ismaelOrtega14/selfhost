@@ -479,7 +479,7 @@ services:
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     restart: unless-stopped
     volumes:
-      - /home/ismael/immich/data:/data
+      - /home/ismael/immich/library:/data
       - /etc/localtime:/etc/localtime:ro
     environment:
       DB_PASSWORD: ${IMMICH_DB_PASSWORD}
