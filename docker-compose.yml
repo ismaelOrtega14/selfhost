@@ -1,6 +1,6 @@
 # =====================================================================
 # selfhost — unified compose
-# Orden: network → security → notflix → tracker → resto
+# Orden: network → security → notflix → tracker → resto → proxy
 # Secretos via ${VAR} desde Portainer; demas vars en claro
 # =====================================================================
 
@@ -52,82 +52,8 @@ services:
         condition: service_healthy
 
   # ===================================================================
-  # NIVEL 2 — security (pangolin + authentik + traefik)
+  # NIVEL 2 — security (authentik)
   # ===================================================================
-  pangolin:
-    image: fosrl/pangolin:latest
-    restart: unless-stopped
-    volumes:
-      - /home/ismael/pangolin/pangolin/config:/app/config
-    networks:
-      - pangolin_net
-    environment:
-      SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/api/v1/"]
-      interval: 3s
-      timeout: 3s
-      retries: 15
-      start_period: 10s
-    depends_on:
-      dns-server:
-        condition: service_healthy
-
-  gerbil:
-    image: fosrl/gerbil:1.0.0
-    restart: unless-stopped
-    command:
-      - --reachableAt=http://gerbil:3003
-      - --generateAndSaveKeyTo=/var/config/key
-      - --remoteConfig=http://pangolin:3001/api/v1/gerbil/get-config
-      - --reportBandwidthTo=http://pangolin:3001/api/v1/gerbil/receive-bandwidth
-    volumes:
-      - /home/ismael/pangolin/gerbil:/var/config
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    networks:
-      - pangolin_net
-    ports:
-      - "51820:51820/udp"
-      - "21820:21820/udp"
-    healthcheck:
-      test: ["CMD-SHELL", "kill -0 1 2>/dev/null || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      dns-server:
-        condition: service_healthy
-      pangolin:
-        condition: service_healthy
-
-  traefik:
-    image: traefik:latest
-    restart: unless-stopped
-    networks:
-      - pangolin_net
-    ports:
-      - "443:443/tcp"
-      - "80:80/tcp"
-    volumes:
-      - /home/ismael/pangolin/traefik/config:/etc/traefik
-      - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
-    command:
-      - --configFile=/etc/traefik/traefik_config.yml
-    healthcheck:
-      test: ["CMD", "traefik", "version"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      dns-server:
-        condition: service_healthy
-      pangolin:
-        condition: service_healthy
-
   authentik-redis:
     image: redis:7-alpine
     command: --save 60 1 --loglevel warning
@@ -718,6 +644,85 @@ services:
       dns-server:
         condition: service_healthy
       yamtrack:
+        condition: service_healthy
+
+  # ===================================================================
+  # NIVEL 6 — reverse proxy (arranca el último)
+  # ===================================================================
+  pangolin:
+    image: fosrl/pangolin:latest
+    restart: unless-stopped
+    volumes:
+      - /home/ismael/pangolin/pangolin/config:/app/config
+    networks:
+      - pangolin_net
+    environment:
+      SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/api/v1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      homepage:
+        condition: service_healthy
+
+  gerbil:
+    image: fosrl/gerbil:1.0.0
+    restart: unless-stopped
+    command:
+      - --reachableAt=http://gerbil:3003
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/gerbil/get-config
+      - --reportBandwidthTo=http://pangolin:3001/api/v1/gerbil/receive-bandwidth
+    volumes:
+      - /home/ismael/pangolin/gerbil:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - pangolin_net
+    ports:
+      - "51820:51820/udp"
+      - "21820:21820/udp"
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      pangolin:
+        condition: service_healthy
+
+  traefik:
+    image: traefik:latest
+    restart: unless-stopped
+    networks:
+      - pangolin_net
+    ports:
+      - "443:443/tcp"
+      - "80:80/tcp"
+    volumes:
+      - /home/ismael/pangolin/traefik/config:/etc/traefik
+      - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    healthcheck:
+      test: ["CMD", "traefik", "version"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+      pangolin:
         condition: service_healthy
 
 # ===================================================================
