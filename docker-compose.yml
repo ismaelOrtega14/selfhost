@@ -339,7 +339,7 @@ services:
         condition: service_healthy
 
   yamtrack:
-    image: ghcr.io/fuzzygrim/yamtrack:0.25.2
+    image: ghcr.io/fuzzygrim/yamtrack
     restart: unless-stopped
     ports:
       - "8010:8000/tcp"
