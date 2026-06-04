@@ -23,25 +23,11 @@ Repositorio unificado de servicios self-hosted gestionado con Docker Compose v2 
 
 Definido mediante `depends_on` con healthchecks. Cada nivel depende de `dns-server` + servicio(s) del nivel anterior. Nivel 6 (reverse proxy) arranca el último para que todos los servicios estén ya operativos.
 
-## Arranque con systemd
-
-El stack se gestiona via systemd (`selfhost.service`) para garantizar orden al arrancar. Docker `restart: no` evita que el daemon lance contenedores sin orden.
-
-```bash
-sudo cp selfhost.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable selfhost.service
-sudo systemctl start selfhost.service         # Arrancar ahora
-sudo systemctl status selfhost.service        # Ver estado
-```
-
-Usa `docker compose up -d --wait` que respeta `depends_on` con `condition: service_healthy`. El flag `--wait-timeout 300` da margen a servicios lentos.
-
 ## Convenciones
 
 - No usar `version:` en compose.yml (obsoleto en Compose v2)
 - Puerto en formato corto: `"host:container/protocol"` (ej: `"3002:3000/tcp"`)
-- `restart: no` en todos los servicios (gestionado por systemd, no por el daemon de Docker)
+- `restart: unless-stopped` en todos los servicios
 - Healthchecks según herramientas disponibles en cada imagen: `wget`, `curl`, `node`, `python3`, `kill -0`, comando nativo
 - Servicios con monturas NFS (`uptime-kuma`, `homepage`): `entrypoint: []` para evitar `chown` fallido
 - Acceso a socket Docker: `group_add: ["992"]` montando `/var/run/docker.sock`
@@ -74,9 +60,8 @@ Usa `docker compose up -d --wait` que respeta `depends_on` con `condition: servi
 ## Comandos
 
 ```bash
-sudo systemctl start selfhost.service       # Deploy completo con orden
-sudo systemctl stop selfhost.service        # Parar todo
-sudo systemctl restart selfhost.service     # Reiniciar stack
+docker compose up -d                        # Deploy completo
+docker compose up -d <service>              # Servicio específico
 docker compose logs -f <service>            # Logs
 docker compose ps                           # Estado
 docker compose pull <service>               # Actualizar imagen

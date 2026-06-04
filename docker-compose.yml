@@ -10,7 +10,7 @@ services:
   # ===================================================================
   dns-server:
     image: technitium/dns-server:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "5380:5380/tcp"
       - "53:53/tcp"
@@ -31,7 +31,7 @@ services:
 
   uptime-kuma:
     image: louislam/uptime-kuma:latest
-    restart: no
+    restart: unless-stopped
     group_add:
       - "992"
     entrypoint: []
@@ -57,7 +57,7 @@ services:
   authentik-redis:
     image: redis:7-alpine
     command: --save 60 1 --loglevel warning
-    restart: no
+    restart: unless-stopped
     volumes:
       - redis-authentik:/data
     healthcheck:
@@ -73,7 +73,7 @@ services:
   authentik-server:
     image: ghcr.io/goauthentik/server:latest
     command: server
-    restart: no
+    restart: unless-stopped
     ports:
       - "9433:9443/tcp"
       - "9900:9000/tcp"
@@ -103,7 +103,7 @@ services:
   authentik-worker:
     image: ghcr.io/goauthentik/server:latest
     command: worker
-    restart: no
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/ismael/authentik/media:/media
@@ -128,7 +128,7 @@ services:
   # ===================================================================
   transmission:
     image: lscr.io/linuxserver/transmission:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "9091:9091/tcp"
     volumes:
@@ -156,7 +156,7 @@ services:
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
-    restart: no
+    restart: unless-stopped
     environment:
       LOG_LEVEL: info
     healthcheck:
@@ -173,7 +173,7 @@ services:
 
   jackett:
     image: lscr.io/linuxserver/jackett:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "9117:9117/tcp"
     volumes:
@@ -201,7 +201,7 @@ services:
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "8989:8989/tcp"
     volumes:
@@ -231,7 +231,7 @@ services:
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "7878:7878/tcp"
     volumes:
@@ -261,7 +261,7 @@ services:
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "6767:6767/tcp"
     volumes:
@@ -291,7 +291,7 @@ services:
 
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "5055:5055/tcp"
     user: "1026"
@@ -323,7 +323,7 @@ services:
   # ===================================================================
   redis-yamtrack:
     image: redis:8-alpine
-    restart: no
+    restart: unless-stopped
     volumes:
       - redis-yamtrack:/data
     healthcheck:
@@ -340,7 +340,7 @@ services:
 
   yamtrack:
     image: ghcr.io/fuzzygrim/yamtrack
-    restart: no
+    restart: unless-stopped
     ports:
       - "8010:8000/tcp"
     dns: 192.168.0.250
@@ -373,7 +373,7 @@ services:
   # ===================================================================
   meilisearch:
     image: getmeili/meilisearch:v1.12.8
-    restart: no
+    restart: unless-stopped
     volumes:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
     environment:
@@ -391,7 +391,7 @@ services:
 
   linkwarden:
     image: ghcr.io/linkwarden/linkwarden:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
@@ -421,7 +421,7 @@ services:
 
   actual-budget:
     image: actualbudget/actual-server:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "5006:5006/tcp"
     volumes:
@@ -440,7 +440,7 @@ services:
 
   immich-valkey:
     image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
-    restart: no
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping || exit 1"]
       interval: 30s
@@ -454,7 +454,7 @@ services:
 
   immich-database:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
-    restart: no
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
       POSTGRES_USER: ${IMMICH_DB_USERNAME}
@@ -477,7 +477,7 @@ services:
 
   immich-server:
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
-    restart: no
+    restart: unless-stopped
     volumes:
       - /home/ismael/immich/library:/data
       - /etc/localtime:/etc/localtime:ro
@@ -510,7 +510,7 @@ services:
 
   immich-machine-learning:
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
-    restart: no
+    restart: unless-stopped
     volumes:
       - immich-model-cache:/cache
     environment:
@@ -523,7 +523,7 @@ services:
 
   mealie:
     image: ghcr.io/mealie-recipes/mealie:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "9925:9000/tcp"
     user: "1024:100"
@@ -563,7 +563,7 @@ services:
 
   paperless-broker:
     image: docker.io/library/redis:8
-    restart: no
+    restart: unless-stopped
     volumes:
       - paperless-redis:/data
     healthcheck:
@@ -580,7 +580,7 @@ services:
 
   paperless-webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    restart: no
+    restart: unless-stopped
     ports:
       - "8998:8000/tcp"
     user: "1024:100"
@@ -623,7 +623,7 @@ services:
 
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
-    restart: no
+    restart: unless-stopped
     entrypoint: []
     group_add:
       - "992"
@@ -651,7 +651,7 @@ services:
   # ===================================================================
   pangolin:
     image: fosrl/pangolin:latest
-    restart: no
+    restart: unless-stopped
     volumes:
       - /home/ismael/pangolin/pangolin/config:/app/config
     networks:
@@ -672,7 +672,7 @@ services:
 
   gerbil:
     image: fosrl/gerbil:1.0.0
-    restart: no
+    restart: unless-stopped
     command:
       - --reachableAt=http://gerbil:3003
       - --generateAndSaveKeyTo=/var/config/key
@@ -702,7 +702,7 @@ services:
 
   traefik:
     image: traefik:latest
-    restart: no
+    restart: unless-stopped
     networks:
       - pangolin_net
     ports:
