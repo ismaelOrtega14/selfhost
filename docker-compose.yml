@@ -711,6 +711,8 @@ services:
     volumes:
       - /home/ismael/pangolin/traefik/config:/etc/traefik
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
+    environment:
+      DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
     command:
       - --configFile=/etc/traefik/traefik_config.yml
     healthcheck:
