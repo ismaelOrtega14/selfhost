@@ -1,0 +1,16 @@
+[Unit]
+Description=Selfhost Docker Stack
+Requires=docker.service network-online.target
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/ismael/selfhost
+ExecStart=/usr/bin/docker compose up -d --wait --wait-timeout 300
+ExecStop=/usr/bin/docker compose down
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
