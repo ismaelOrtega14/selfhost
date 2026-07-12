@@ -624,12 +624,11 @@ services:
   couchdb:
     image: couchdb:3
     restart: unless-stopped
-    user: "0:0"
     ports:
       - "5984:5984/tcp"
     volumes:
-      - /home/ismael/couchdb/data:/opt/couchdb/data
-      - /home/ismael/couchdb/etc:/opt/couchdb/etc/local.d
+      - couchdb-data:/opt/couchdb/data
+      - couchdb-etc:/opt/couchdb/etc/local.d
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
@@ -755,6 +754,8 @@ volumes:
   redis-yamtrack:
   immich-model-cache:
   paperless-redis:
+  couchdb-data:
+  couchdb-etc:
 
 networks:
   pangolin_net:
