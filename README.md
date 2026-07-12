@@ -10,7 +10,7 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 | 2 | authentik-redis, authentik-server, authentik-worker |
 | 3 | transmission, flaresolverr, jackett, sonarr, radarr, bazarr, seerr |
 | 4 | redis-yamtrack, yamtrack |
-| 5 | meilisearch, linkwarden, actual-budget, immich-*, mealie, paperless-*, homepage |
+| 5 | meilisearch, linkwarden, actual-budget, immich-*, mealie, paperless-*, couchdb, homepage |
 | 6 | pangolin, gerbil, traefik |
 
 ## Puertos destacados
@@ -33,6 +33,7 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 | 2283 | Immich |
 | 9925 | Mealie |
 | 8998 | Paperless |
+| 5984 | CouchDB (Obsidian LiveSync) |
 | 51820/udp | Gerbil (WireGuard) |
 
 ## Secretos (${VAR} en compose — rellenar en Portainer)
@@ -59,6 +60,8 @@ Servicios self-hosted unificados en un solo `docker-compose.yml`.
 | `LINKWARDEN_DATABASE_URL` | linkwarden |
 | `LINKWARDEN_CLIENT_ID` | linkwarden |
 | `LINKWARDEN_CLIENT_SECRET` | linkwarden |
+| `COUCHDB_USER` | couchdb |
+| `COUCHDB_PASSWORD` | couchdb |
 
 ## Deploy
 

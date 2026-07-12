@@ -621,6 +621,28 @@ services:
       yamtrack:
         condition: service_healthy
 
+  couchdb:
+    image: couchdb:3
+    restart: unless-stopped
+    user: "0:0"
+    ports:
+      - "5984:5984/tcp"
+    volumes:
+      - /home/ismael/couchdb/data:/opt/couchdb/data
+      - /home/ismael/couchdb/etc:/opt/couchdb/etc/local.d
+    environment:
+      COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    healthcheck:
+      test: curl -sf http://127.0.0.1:5984/_up || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      dns-server:
+        condition: service_healthy
+
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     restart: unless-stopped
