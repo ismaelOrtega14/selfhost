@@ -36,6 +36,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - pangolin_net
+    networks:
+      - default
+      - pangolin_net
     depends_on:
       authentik-redis:
         condition: service_healthy
@@ -57,6 +62,9 @@ services:
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_REDIS__HOST: authentik-redis
+    networks:
+      - default
+      - pangolin_net
     depends_on:
       authentik-redis:
         condition: service_healthy
@@ -65,3 +73,7 @@ services:
 
 volumes:
   redis-authentik:
+
+networks:
+  pangolin_net:
+    external: true

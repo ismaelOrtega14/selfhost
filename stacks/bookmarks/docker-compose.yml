@@ -6,6 +6,8 @@ services:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7700/health"]
       interval: 10s
@@ -34,6 +36,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - default
+      - pangolin_net
     depends_on:
       meilisearch:
         condition: service_healthy
+
+networks:
+  pangolin_net:
+    external: true
