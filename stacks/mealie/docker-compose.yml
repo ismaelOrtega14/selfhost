@@ -7,7 +7,26 @@ services:
     user: "1024:100"
     volumes:
       - /home/ismael/mealie/data:/app/data/
-    env_file: stack.env
+    environment:
+      POSTGRES_PASSWORD: ${MEALIE_POSTGRES_PASSWORD}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      ALLOW_SIGNUP: "false"
+      TZ: Europe/Madrid
+      BASE_URL: https://mealie.ios-tools.dedyn.io
+      DB_ENGINE: postgres
+      POSTGRES_USER: mealie
+      POSTGRES_SERVER: 192.168.0.251
+      POSTGRES_PORT: "5433"
+      POSTGRES_DB: mealie
+      OIDC_AUTH_ENABLED: "true"
+      OIDC_PROVIDER_NAME: authentik
+      OIDC_CONFIGURATION_URL: https://authentik.ios-tools.dedyn.io/application/o/mealie/.well-known/openid-configuration
+      OIDC_SIGNUP_ENABLED: "true"
+      OIDC_USER_GROUP: mealie-user
+      OIDC_ADMIN_GROUP: mealie-admin
+      OIDC_AUTO_REDIRECT: "true"
+      OIDC_REMEMBER_ME: "true"
     healthcheck:
       test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
       interval: 120s

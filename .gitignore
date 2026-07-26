@@ -1,9 +1,3 @@
-# Stack env files (secrets)
-stacks/*/stack.env
-
-# Docker env files
-.env
-
 # OS files
 *.swp
 *.swo

@@ -17,7 +17,16 @@ services:
     ports:
       - "8010:8000/tcp"
     dns: 192.168.0.250
-    env_file: stack.env
+    environment:
+      SECRET: ${YAMTRACK_SECRET}
+      DB_PASSWORD: ${YAMTRACK_DB_PASSWORD}
+      HARDCOVER_API: ${YAMTRACK_HARDCOVER_KEY}
+      REDIS_URL: redis://redis-yamtrack:6379
+      DB_HOST: 192.168.0.251
+      DB_NAME: yamtrack
+      DB_USER: yamtrack
+      DB_PORT: "5433"
+      TZ: Europe/Berlin
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8000 || exit 1
       interval: 30s

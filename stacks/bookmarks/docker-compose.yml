@@ -4,7 +4,8 @@ services:
     restart: unless-stopped
     volumes:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
-    env_file: stack.env
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7700/health"]
       interval: 10s
@@ -18,7 +19,15 @@ services:
       - "3000:3000"
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
-    env_file: stack.env
+    environment:
+      NEXTAUTH_SECRET: ${LINKWARDEN_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: https://bookmarks.ios-tools.dedyn.io/api/v1/auth
+      DATABASE_URL: ${LINKWARDEN_DATABASE_URL}
+      NEXT_PUBLIC_AUTHENTIK_ENABLED: true
+      AUTHENTIK_CUSTOM_NAME: authentik
+      AUTHENTIK_ISSUER: https://authentik.ios-tools.dedyn.io/application/o/linkwarden
+      AUTHENTIK_CLIENT_ID: ${LINKWARDEN_CLIENT_ID}
+      AUTHENTIK_CLIENT_SECRET: ${LINKWARDEN_CLIENT_SECRET}
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:3000').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s

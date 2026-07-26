@@ -25,7 +25,7 @@ stacks/
 
 - Cero dependencias cruzadas entre stacks
 - `depends_on` solo dentro del mismo stack
-- Secretos en `stack.env` (no commit), referenciado via `env_file: stack.env`
+- Secretos como `${VAR}` inline en `environment:` (Dockhand los sustituye)
 - Valores no sensibles como literales en `environment:`
 - `restart: unless-stopped` en todos los servicios
 - Healthchecks según herramientas disponibles en cada imagen
@@ -49,12 +49,16 @@ for s in network uptime security media tracker bookmarks immich mealie paperless
 done
 ```
 
-## Stack.env (no commit)
+## Variables por stack (configurar en Dockhand Secrets)
 
-Cada stack tiene `stack.env.example` con las variables documentadas.
-Copiar a `stack.env` y rellenar secretos antes de desplegar:
-
-```bash
-cp stacks/network/stack.env.example stacks/network/stack.env
-# editar stack.env con valores reales
-```
+| Stack | Variables |
+|---|---|
+| network | `PANGOLIN_SERVER_SECRET`, `TRAEFIK_DESEC_TOKEN` |
+| security | `AUTHENTIK_POSTGRESQL__PASSWORD`, `AUTHENTIK_SECRET_KEY` |
+| media | `TRANSMISSION_PASSWORD` |
+| tracker | `YAMTRACK_SECRET`, `YAMTRACK_DB_PASSWORD`, `YAMTRACK_HARDCOVER_KEY` |
+| bookmarks | `MEILI_MASTER_KEY`, `LINKWARDEN_NEXTAUTH_SECRET`, `LINKWARDEN_DATABASE_URL`, `LINKWARDEN_CLIENT_ID`, `LINKWARDEN_CLIENT_SECRET` |
+| immich | `IMMICH_DB_PASSWORD`, `IMMICH_DB_USERNAME`, `IMMICH_DB_DATABASE_NAME` |
+| mealie | `MEALIE_POSTGRES_PASSWORD`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` |
+| paperless | `PAPERLESS_DBPASS`, `PAPERLESS_SOCIALACCOUNT_PROVIDERS` |
+| obsidian | `COUCHDB_USER`, `COUCHDB_PASSWORD` |
