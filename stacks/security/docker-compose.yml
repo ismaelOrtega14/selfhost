@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     volumes:
       - redis-authentik:/data
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 30s
@@ -30,6 +32,8 @@ services:
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_REDIS__HOST: authentik-redis
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import http.client, sys; c=http.client.HTTPConnection('localhost',9000); c.request('GET','/-/health/ready/'); sys.exit(0 if c.getresponse().status==200 else 1)\""]
       interval: 30s
@@ -57,6 +61,8 @@ services:
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_REDIS__HOST: authentik-redis
+    networks:
+      - pangolin_net
     depends_on:
       authentik-redis:
         condition: service_healthy
@@ -67,5 +73,5 @@ volumes:
   redis-authentik:
 
 networks:
-  default:
-    name: pangolin_net
+  pangolin_net:
+    external: true

@@ -11,6 +11,8 @@ services:
     volumes:
       - /home/ismael/uptimeKuma/data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - pangolin_net
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:3001').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s
@@ -19,5 +21,5 @@ services:
       start_period: 15s
 
 networks:
-  default:
-    name: pangolin_net
+  pangolin_net:
+    external: true

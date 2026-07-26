@@ -12,6 +12,8 @@ services:
     volumes:
       - /home/ismael/homepage/config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - pangolin_net
     healthcheck:
       test: wget -qO- http://127.0.0.1:3000/api/healthcheck || exit 1
       interval: 30s
@@ -20,5 +22,5 @@ services:
       start_period: 20s
 
 networks:
-  default:
-    name: pangolin_net
+  pangolin_net:
+    external: true

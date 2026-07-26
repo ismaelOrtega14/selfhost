@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     volumes:
       - paperless-redis:/data
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 30s
@@ -40,6 +42,8 @@ services:
       PAPERLESS_ENABLE_ALLAUTH: "true"
       PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS: "true"
       PAPERLESS_PRE_CONSUME_SCRIPT: /usr/src/paperless/scripts/removepassword.py
+    networks:
+      - pangolin_net
     healthcheck:
       test: curl -s http://127.0.0.1:8000 > /dev/null || exit 1
       interval: 30s
@@ -54,5 +58,5 @@ volumes:
   paperless-redis:
 
 networks:
-  default:
-    name: pangolin_net
+  pangolin_net:
+    external: true

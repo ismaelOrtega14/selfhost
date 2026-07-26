@@ -6,6 +6,8 @@ services:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7700/health"]
       interval: 10s
@@ -28,6 +30,8 @@ services:
       AUTHENTIK_ISSUER: https://authentik.ios-tools.dedyn.io/application/o/linkwarden
       AUTHENTIK_CLIENT_ID: ${LINKWARDEN_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${LINKWARDEN_CLIENT_SECRET}
+    networks:
+      - pangolin_net
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:3000').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s
@@ -39,5 +43,5 @@ services:
         condition: service_healthy
 
 networks:
-  default:
-    name: pangolin_net
+  pangolin_net:
+    external: true

@@ -13,6 +13,8 @@ services:
     environment:
       DNS_SERVER_DOMAIN: ${DNS_SERVER_DOMAIN:-dns-server}
       DNS_SERVER_FORWARDERS: ${DNS_SERVER_FORWARDERS:-1.1.1.1, 1.1.2.2}
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
       interval: 30s
@@ -27,6 +29,8 @@ services:
       - /home/ismael/pangolin/pangolin/config:/app/config
     environment:
       SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
+    networks:
+      - pangolin_net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/api/v1/"]
       interval: 3s
@@ -64,6 +68,8 @@ services:
         condition: service_healthy
       pangolin:
         condition: service_healthy
+    networks:
+      - pangolin_net
 
   traefik:
     image: traefik:latest
@@ -89,8 +95,10 @@ services:
         condition: service_healthy
       pangolin:
         condition: service_healthy
+    networks:
+      - pangolin_net
 
 networks:
-  default:
+  pangolin_net:
     name: pangolin_net
     driver: bridge
