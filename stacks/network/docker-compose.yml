@@ -25,8 +25,6 @@ services:
     restart: unless-stopped
     volumes:
       - /home/ismael/pangolin/pangolin/config:/app/config
-    networks:
-      - pangolin_net
     environment:
       SERVER_SECRET: ${PANGOLIN_SERVER_SECRET}
     healthcheck:
@@ -52,8 +50,6 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    networks:
-      - pangolin_net
     ports:
       - "51820:51820/udp"
       - "21820:21820/udp"
@@ -72,8 +68,6 @@ services:
   traefik:
     image: traefik:latest
     restart: unless-stopped
-    networks:
-      - pangolin_net
     ports:
       - "443:443/tcp"
       - "80:80/tcp"
@@ -97,5 +91,6 @@ services:
         condition: service_healthy
 
 networks:
-  pangolin_net:
+  default:
+    name: pangolin_net
     driver: bridge

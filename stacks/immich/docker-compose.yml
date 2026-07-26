@@ -43,9 +43,6 @@ services:
     ports:
       - "2283:2283/tcp"
     user: "1024:100"
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: node -e "require('http').get('http://127.0.0.1:2283/server-info/version').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
       interval: 30s
@@ -65,8 +62,6 @@ services:
       - immich-model-cache:/cache
     environment:
       IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
-    networks:
-      - pangolin_net
     depends_on:
       immich-server:
         condition: service_healthy
@@ -75,5 +70,5 @@ volumes:
   immich-model-cache:
 
 networks:
-  pangolin_net:
-    external: true
+  default:
+    name: pangolin_net

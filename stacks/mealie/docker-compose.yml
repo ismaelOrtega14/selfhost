@@ -27,8 +27,6 @@ services:
       OIDC_ADMIN_GROUP: mealie-admin
       OIDC_AUTO_REDIRECT: "true"
       OIDC_REMEMBER_ME: "true"
-    networks:
-      - pangolin_net
     healthcheck:
       test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
       interval: 120s
@@ -37,5 +35,5 @@ services:
       start_period: 30s
 
 networks:
-  pangolin_net:
-    external: true
+  default:
+    name: pangolin_net

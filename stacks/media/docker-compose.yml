@@ -15,9 +15,6 @@ services:
       TZ: Europe/Madrid
       USER: ismael
       PASS: ${TRANSMISSION_PASSWORD}
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: curl -s http://127.0.0.1:9091 > /dev/null || exit 1
       interval: 30s
@@ -30,8 +27,6 @@ services:
     restart: unless-stopped
     environment:
       LOG_LEVEL: info
-    networks:
-      - pangolin_net
     healthcheck:
       test: curl -sf http://127.0.0.1:8191/health || exit 1
       interval: 30s
@@ -53,9 +48,6 @@ services:
       PGID: "100"
       TZ: Europe/Madrid
       AUTO_UPDATE: "true"
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: curl -s http://127.0.0.1:9117 > /dev/null || exit 1
       interval: 30s
@@ -77,9 +69,6 @@ services:
       PUID: "1026"
       PGID: "100"
       TZ: Europe/Madrid
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8989 || exit 1
       interval: 30s
@@ -104,9 +93,6 @@ services:
       PUID: "1026"
       PGID: "100"
       TZ: Europe/Madrid
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:7878 || exit 1
       interval: 30s
@@ -131,9 +117,6 @@ services:
       PUID: "1026"
       PGID: "100"
       TZ: Europe/Madrid
-    networks:
-      - default
-      - pangolin_net
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:6767 || exit 1
       interval: 30s
@@ -161,9 +144,6 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
-    networks:
-      - default
-      - pangolin_net
     depends_on:
       sonarr:
         condition: service_healthy
@@ -171,5 +151,5 @@ services:
         condition: service_healthy
 
 networks:
-  pangolin_net:
-    external: true
+  default:
+    name: pangolin_net

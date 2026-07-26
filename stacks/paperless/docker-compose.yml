@@ -46,9 +46,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    networks:
-      - default
-      - pangolin_net
     depends_on:
       paperless-broker:
         condition: service_healthy
@@ -57,5 +54,5 @@ volumes:
   paperless-redis:
 
 networks:
-  pangolin_net:
-    external: true
+  default:
+    name: pangolin_net
