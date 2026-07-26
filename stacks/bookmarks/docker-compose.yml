@@ -2,6 +2,7 @@ services:
   meilisearch:
     image: getmeili/meilisearch:v1.12.8
     restart: unless-stopped
+    env_file: .env.dockhand
     volumes:
       - /home/ismael/bookmarks/meilisearch/data:/meili_data
     environment:
@@ -17,8 +18,9 @@ services:
   linkwarden:
     image: ghcr.io/linkwarden/linkwarden:latest
     restart: unless-stopped
+    env_file: .env.dockhand
     ports:
-      - "3000:3000"
+      - "3003:3000"
     volumes:
       - /home/ismael/bookmarks/linkwarden/data:/data/data
     environment:

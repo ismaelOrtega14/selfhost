@@ -2,6 +2,7 @@ services:
   paperless-broker:
     image: docker.io/library/redis:8
     restart: unless-stopped
+    env_file: .env.dockhand
     volumes:
       - paperless-redis:/data
     networks:
@@ -16,6 +17,7 @@ services:
   paperless-webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     restart: unless-stopped
+    env_file: .env.dockhand
     ports:
       - "8998:8000/tcp"
     user: "1024:100"

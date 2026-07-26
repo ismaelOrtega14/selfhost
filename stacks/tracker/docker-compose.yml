@@ -2,6 +2,7 @@ services:
   redis-yamtrack:
     image: redis:8-alpine
     restart: unless-stopped
+    env_file: .env.dockhand
     volumes:
       - redis-yamtrack:/data
     networks:
@@ -16,6 +17,7 @@ services:
   yamtrack:
     image: ghcr.io/fuzzygrim/yamtrack
     restart: unless-stopped
+    env_file: .env.dockhand
     ports:
       - "8010:8000/tcp"
     dns: 192.168.0.250

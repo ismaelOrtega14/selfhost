@@ -2,6 +2,7 @@ services:
   mealie:
     image: ghcr.io/mealie-recipes/mealie:latest
     restart: unless-stopped
+    env_file: .env.dockhand
     ports:
       - "9925:9000/tcp"
     user: "1024:100"

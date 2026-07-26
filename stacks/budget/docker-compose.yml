@@ -2,6 +2,7 @@ services:
   actual-budget:
     image: actualbudget/actual-server:latest
     restart: unless-stopped
+    env_file: .env.dockhand
     ports:
       - "5006:5006/tcp"
     volumes:
