@@ -1,0 +1,90 @@
+services:
+  dns-server:
+    image: technitium/dns-server:latest
+    restart: unless-stopped
+    ports:
+      - "5380:5380/tcp"
+      - "53:53/tcp"
+      - "53:53/udp"
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+    volumes:
+      - /home/ismael/technitium/config:/etc/dns
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short +retry=0 +norecurse @127.0.0.1 google.es || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  pangolin:
+    image: fosrl/pangolin:latest
+    restart: unless-stopped
+    volumes:
+      - /home/ismael/pangolin/pangolin/config:/app/config
+    networks:
+      - pangolin_net
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3001/api/v1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
+  gerbil:
+    image: fosrl/gerbil:1.0.0
+    restart: unless-stopped
+    command:
+      - --reachableAt=http://gerbil:3003
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/gerbil/get-config
+      - --reportBandwidthTo=http://pangolin:3001/api/v1/gerbil/receive-bandwidth
+    volumes:
+      - /home/ismael/pangolin/gerbil:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - pangolin_net
+    ports:
+      - "51820:51820/udp"
+      - "21820:21820/udp"
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      pangolin:
+        condition: service_healthy
+
+  traefik:
+    image: traefik:latest
+    restart: unless-stopped
+    networks:
+      - pangolin_net
+    ports:
+      - "443:443/tcp"
+      - "80:80/tcp"
+    volumes:
+      - /home/ismael/pangolin/traefik/config:/etc/traefik
+      - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
+    env_file: stack.env
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    healthcheck:
+      test: ["CMD", "traefik", "version"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      pangolin:
+        condition: service_healthy
+
+networks:
+  pangolin_net:
+    driver: bridge

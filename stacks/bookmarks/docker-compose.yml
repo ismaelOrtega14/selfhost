@@ -1,0 +1,30 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.12.8
+    restart: unless-stopped
+    volumes:
+      - /home/ismael/bookmarks/meilisearch/data:/meili_data
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - /home/ismael/bookmarks/linkwarden/data:/data/data
+    env_file: stack.env
+    healthcheck:
+      test: node -e "require('http').get('http://127.0.0.1:3000').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      meilisearch:
+        condition: service_healthy

@@ -1,0 +1,53 @@
+services:
+  authentik-redis:
+    image: redis:7-alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - redis-authentik:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      timeout: 3s
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    command: server
+    restart: unless-stopped
+    ports:
+      - "9433:9443/tcp"
+      - "9900:9000/tcp"
+    volumes:
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import http.client, sys; c=http.client.HTTPConnection('localhost',9000); c.request('GET','/-/health/ready/'); sys.exit(0 if c.getresponse().status==200 else 1)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      authentik-redis:
+        condition: service_healthy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    command: worker
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/ismael/authentik/media:/media
+      - /home/ismael/authentik/certs:/certs
+      - /home/ismael/authentik/custom-templates:/templates
+    env_file: stack.env
+    depends_on:
+      authentik-redis:
+        condition: service_healthy
+      authentik-server:
+        condition: service_healthy
+
+volumes:
+  redis-authentik:

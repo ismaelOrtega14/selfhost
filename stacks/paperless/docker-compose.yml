@@ -1,0 +1,38 @@
+services:
+  paperless-broker:
+    image: docker.io/library/redis:8
+    restart: unless-stopped
+    volumes:
+      - paperless-redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  paperless-webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    ports:
+      - "8998:8000/tcp"
+    user: "1024:100"
+    volumes:
+      - /home/ismael/paperless/paperless/scripts:/usr/src/paperless/scripts
+      - /home/ismael/paperless/paperless/data:/usr/src/paperless/data
+      - /home/ismael/paperless/paperless/media:/usr/src/paperless/media
+      - /home/ismael/paperless-ngx/export:/usr/src/paperless/export
+      - /home/ismael/paperless-ngx/consume:/usr/src/paperless/consume
+    env_file: stack.env
+    healthcheck:
+      test: curl -s http://127.0.0.1:8000 > /dev/null || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      paperless-broker:
+        condition: service_healthy
+
+volumes:
+  paperless-redis:

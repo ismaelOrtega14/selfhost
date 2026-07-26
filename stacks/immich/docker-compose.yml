@@ -1,0 +1,66 @@
+services:
+  immich-valkey:
+    image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  immich-database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    restart: unless-stopped
+    env_file: stack.env
+    environment:
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - /home/ismael/immich/postgres:/var/lib/postgresql/data
+    shm_size: 128mb
+    user: "1024:100"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U immich -d immich"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    restart: unless-stopped
+    volumes:
+      - /home/ismael/immich/library:/data
+      - /etc/localtime:/etc/localtime:ro
+    env_file: stack.env
+    environment:
+      DB_HOSTNAME: immich-database
+      REDIS_HOSTNAME: immich-valkey
+      IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
+      IMMICH_IGNORE_MOUNT_CHECK_ERRORS: "true"
+    ports:
+      - "2283:2283/tcp"
+    user: "1024:100"
+    healthcheck:
+      test: node -e "require('http').get('http://127.0.0.1:2283/server-info/version').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      immich-database:
+        condition: service_healthy
+      immich-valkey:
+        condition: service_healthy
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    restart: unless-stopped
+    volumes:
+      - immich-model-cache:/cache
+    environment:
+      IMMICH_MACHINE_LEARNING_MEMORY_LIMIT: 4G
+    depends_on:
+      immich-server:
+        condition: service_healthy
+
+volumes:
+  immich-model-cache:

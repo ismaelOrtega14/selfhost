@@ -1,0 +1,16 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    restart: unless-stopped
+    ports:
+      - "9925:9000/tcp"
+    user: "1024:100"
+    volumes:
+      - /home/ismael/mealie/data:/app/data/
+    env_file: stack.env
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"]
+      interval: 120s
+      timeout: 15s
+      retries: 3
+      start_period: 30s

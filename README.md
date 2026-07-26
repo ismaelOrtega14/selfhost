@@ -1,70 +1,39 @@
 # selfhost
 
-Servicios self-hosted unificados en un solo `docker-compose.yml`.
+Servicios self-hosted organizados en stacks independientes para GitOps con Dockhand.
 
-## Orden de arranque
+## Stacks
 
-| Nivel | Servicios |
-|-------|-----------|
-| 1 | dns-server, uptime-kuma |
-| 2 | authentik-redis, authentik-server, authentik-worker |
-| 3 | transmission, flaresolverr, jackett, sonarr, radarr, bazarr, seerr |
-| 4 | redis-yamtrack, yamtrack |
-| 5 | meilisearch, linkwarden, actual-budget, immich-*, mealie, paperless-*, couchdb, homepage |
-| 6 | pangolin, gerbil, traefik |
+| Stack | Servicios | Puertos |
+|-------|-----------|---------|
+| network | dns-server, pangolin, gerbil, traefik | 53, 80, 443, 5380, 51820, 21820 |
+| uptime | uptime-kuma | 3001 |
+| security | authentik (redis, server, worker) | 9433, 9900 |
+| media | transmission, flaresolverr, jackett, sonarr, radarr, bazarr, seerr | 9091, 8191, 9117, 8989, 7878, 6767, 5055 |
+| tracker | yamtrack + redis | 8010 |
+| bookmarks | meilisearch, linkwarden | 7700, 3000 |
+| immich | valkey, postgres, server, ml | 2283 |
+| mealie | mealie | 9925 |
+| paperless | broker, webserver | 8998 |
+| budget | actual-budget | 5006 |
+| homepage | homepage | 3002 |
+| obsidian | couchdb | 5984 |
 
-## Puertos destacados
+## Secretos
 
-| Puerto | Servicio |
-|--------|----------|
-| 5380 | Technitium DNS |
-| 3001 | Uptime Kuma |
-| 3002 | Homepage |
-| 9091 | Transmission |
-| 8191 | Flaresolverr |
-| 9117 | Jackett |
-| 8989 | Sonarr |
-| 7878 | Radarr |
-| 6767 | Bazarr |
-| 5055 | Seerr |
-| 8010 | Yamtrack |
-| 3000 | Linkwarden |
-| 5006 | Actual Budget |
-| 2283 | Immich |
-| 9925 | Mealie |
-| 8998 | Paperless |
-| 5984 | CouchDB (Obsidian LiveSync) |
-| 51820/udp | Gerbil (WireGuard) |
+Los secretos van en `stacks/<stack>/stack.env` (no commit).
+Usar `stack.env.example` como plantilla:
 
-## Secretos (${VAR} en compose — rellenar en Portainer)
-
-| Variable | Servicio |
-|----------|----------|
-| `PANGOLIN_SERVER_SECRET` | pangolin |
-| `TRAEFIK_DESEC_TOKEN` | traefik |
-| `AUTHENTIK_POSTGRESQL__PASSWORD` | authentik |
-| `AUTHENTIK_SECRET_KEY` | authentik |
-| `TRANSMISSION_PASSWORD` | transmission |
-| `YAMTRACK_SECRET` | yamtrack |
-| `YAMTRACK_DB_PASSWORD` | yamtrack |
-| `IMMICH_DB_PASSWORD` | immich |
-| `IMMICH_DB_USERNAME` | immich |
-| `IMMICH_DB_DATABASE_NAME` | immich |
-| `IMMICH_VERSION` | immich (default: release) |
-| `MEALIE_POSTGRES_PASSWORD` | mealie |
-| `OIDC_CLIENT_ID` | mealie |
-| `OIDC_CLIENT_SECRET` | mealie |
-| `PAPERLESS_DBPASS` | paperless |
-| `PAPERLESS_SOCIALACCOUNT_PROVIDERS` | paperless |
-| `LINKWARDEN_NEXTAUTH_SECRET` | linkwarden |
-| `LINKWARDEN_DATABASE_URL` | linkwarden |
-| `LINKWARDEN_CLIENT_ID` | linkwarden |
-| `LINKWARDEN_CLIENT_SECRET` | linkwarden |
-| `COUCHDB_USER` | couchdb |
-| `COUCHDB_PASSWORD` | couchdb |
+```bash
+cp stacks/network/stack.env.example stacks/network/stack.env
+```
 
 ## Deploy
 
 ```bash
-docker compose up -d
+# Stack individual
+docker compose -f stacks/network/docker-compose.yml up -d
+
+# Todos
+for s in stacks/*/; do docker compose -f "$s/docker-compose.yml" up -d; done
 ```
