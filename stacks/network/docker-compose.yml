@@ -84,6 +84,7 @@ services:
     volumes:
       - /home/ismael/pangolin/traefik/config:/etc/traefik
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
+      - /home/ismael/pangolin/traefik/plugins-local:/plugins-local
     environment:
       DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
     command:
