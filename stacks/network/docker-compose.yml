@@ -75,7 +75,7 @@ services:
       - pangolin_net
 
   traefik:
-    image: traefik:v3.6
+    image: traefik:latest
     restart: unless-stopped
     env_file: .env.dockhand
     ports:
@@ -84,11 +84,11 @@ services:
     volumes:
       - /home/ismael/pangolin/traefik/config:/etc/traefik
       - /home/ismael/pangolin/traefik/letsencrypt:/letsencrypt
-      - /home/ismael/pangolin/traefik/plugins-local:/plugins-local
     environment:
       DESEC_TOKEN: ${TRAEFIK_DESEC_TOKEN}
     command:
-      - --configFile=/etc/traefik/traefik_config.yml
+      - /bin/sh
+      - /etc/traefik/traefik-entrypoint.sh
     healthcheck:
       test: ["CMD", "traefik", "version"]
       interval: 15s
