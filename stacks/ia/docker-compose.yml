@@ -1,0 +1,27 @@
+services:
+  omniroute:
+    image: diegosouzapw/omniroute:latest
+    restart: unless-stopped
+    env_file: .env.dockhand
+    ports:
+      - "20128:20128/tcp"
+    volumes:
+      - omniroute-data:/app/data
+    environment:
+      OMNIROUTE_MEMORY_MB: 1024
+    mem_limit: 2g
+    networks:
+      - pangolin_net
+    healthcheck:
+      test: node -e "require('http').get('http://127.0.0.1:20128').on('response',()=>process.exit(0)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  omniroute-data:
+
+networks:
+  pangolin_net:
+    external: true

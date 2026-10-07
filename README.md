@@ -17,6 +17,7 @@ Servicios self-hosted organizados en stacks independientes para GitOps con Dockh
 | paperless | broker, webserver | 8998 | `PAPERLESS_DBPASS`, `PAPERLESS_SOCIALACCOUNT_PROVIDERS` |
 | budget | actual-budget | 5006 | — |
 | homepage | homepage | 3002 | — |
+| ia | omniroute | 20128 | — |
 | obsidian | couchdb | 5984 | `COUCHDB_USER`, `COUCHDB_PASSWORD` |
 
 ## Deploy

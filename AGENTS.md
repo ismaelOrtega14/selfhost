@@ -18,6 +18,7 @@ stacks/
 ├── paperless/       broker, webserver
 ├── budget/          actual-budget
 ├── homepage/        homepage
+├── ia/              omniroute
 └── obsidian/        couchdb
 ```
 
@@ -44,7 +45,7 @@ docker compose -f stacks/media/docker-compose.yml up -d
 docker compose -f stacks/media/docker-compose.yml logs -f sonarr
 
 # Todos los stacks (orden recomendado)
-for s in network uptime security media tracker bookmarks immich mealie paperless budget homepage obsidian; do
+for s in network uptime security media tracker bookmarks immich mealie paperless budget homepage ia obsidian; do
   docker compose -f stacks/$s/docker-compose.yml up -d
 done
 ```
