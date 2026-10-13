@@ -19,6 +19,7 @@ Servicios self-hosted organizados en stacks independientes para GitOps con Dockh
 | homepage | homepage | 3002 | — |
 | ia | omniroute | 20128 | — |
 | obsidian | couchdb | 5984 | `COUCHDB_USER`, `COUCHDB_PASSWORD` |
+| pangolin-site | pangolin-cli (site raspberry, org laboratorio) | — | `PANGOLIN_SITE_ID`, `PANGOLIN_SITE_SECRET` |
 
 ## Deploy
 

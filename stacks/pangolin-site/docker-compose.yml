@@ -1,0 +1,21 @@
+services:
+  pangolin-site:
+    image: fosrl/pangolin-cli:latest
+    container_name: pangolin-site
+    restart: unless-stopped
+    env_file: .env.dockhand
+    group_add:
+      - "992"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      PANGOLIN_ENDPOINT: https://pangolin.ios-tools.dedyn.io
+      SITE_ID: ${PANGOLIN_SITE_ID}
+      SITE_SECRET: ${PANGOLIN_SITE_SECRET}
+      DOCKER_SOCKET: unix:///var/run/docker.sock
+    networks:
+      - pangolin_net
+
+networks:
+  pangolin_net:
+    external: true

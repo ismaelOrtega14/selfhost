@@ -19,7 +19,8 @@ stacks/
 ├── budget/          actual-budget
 ├── homepage/        homepage
 ├── ia/              omniroute
-└── obsidian/        couchdb
+├── obsidian/        couchdb
+└── pangolin-site/   pangolin-cli (site raspberry, org laboratorio)
 ```
 
 ## Reglas
@@ -63,3 +64,4 @@ done
 | mealie | `MEALIE_POSTGRES_PASSWORD`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` |
 | paperless | `PAPERLESS_DBPASS`, `PAPERLESS_SOCIALACCOUNT_PROVIDERS` |
 | obsidian | `COUCHDB_USER`, `COUCHDB_PASSWORD` |
+| pangolin-site | `PANGOLIN_SITE_ID`, `PANGOLIN_SITE_SECRET` |
