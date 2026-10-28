@@ -64,6 +64,28 @@ services:
       retries: 3
       start_period: 20s
 
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    restart: unless-stopped
+    env_file: .env.dockhand
+    ports:
+      - "9696:9696/tcp"
+    volumes:
+      - /home/ismael/prowlarr/config:/config
+    user: "1026"
+    environment:
+      PUID: "1026"
+      PGID: "100"
+      TZ: Europe/Madrid
+    networks:
+      - pangolin_net
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9696 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
