@@ -10,7 +10,7 @@ stacks/
 ├── network/         dns-server, pangolin, gerbil, traefik
 ├── uptime/          uptime-kuma
 ├── security/        authentik (redis, server, worker)
-├── media/           transmission, flaresolverr, jackett, prowlarr, sonarr, radarr, bazarr, seerr
+├── media/           transmission, flaresolverr, prowlarr, sonarr, radarr, bazarr, seerr
 ├── tracker/         yamtrack + redis
 ├── bookmarks/       meilisearch, linkwarden
 ├── immich/          valkey, postgres, server, ml
